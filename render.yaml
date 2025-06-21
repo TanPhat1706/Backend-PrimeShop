@@ -1,5 +1,0 @@
-services:
-  - type: web
-    name: prime-shop-backend
-    runtime: docker  # Sửa từ 'java' sang 'docker'
-    plan: free
