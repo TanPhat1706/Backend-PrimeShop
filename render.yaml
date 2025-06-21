@@ -2,8 +2,6 @@ services:
   - type: web
     name: primeshop-backend
     env: docker
-    buildCommand: "./mvnw clean install"
-    startCommand: "java -jar target/primeshop-0.0.1-SNAPSHOT.jar"
     plan: free
     branch: main
     healthCheckPath: /actuator/health
