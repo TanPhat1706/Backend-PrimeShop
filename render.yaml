@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: primeshop-backend
+    env: java
+    buildCommand: "./mvnw clean install"
+    startCommand: "java -jar target/backend-0.0.1-SNAPSHOT.jar"
+    plan: free
+    branch: main
+    healthCheckPath: /actuator/health
