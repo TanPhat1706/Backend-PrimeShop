@@ -28,6 +28,11 @@ public class ProductController {
     @Autowired
     private ProductRepo productRepo;
 
+    @GetMapping("/test")
+    public String hello() {
+        return "Hello from Render!";
+    }
+
     @GetMapping
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
         return ResponseEntity.ok(productService.getActiveProducts());
