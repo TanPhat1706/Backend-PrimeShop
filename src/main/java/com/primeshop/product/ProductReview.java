@@ -32,7 +32,7 @@ public class ProductReview {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "text")
     private String content;
     private Integer rating;
     private LocalDateTime createdAt;

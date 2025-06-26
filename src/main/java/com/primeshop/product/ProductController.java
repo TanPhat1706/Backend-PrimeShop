@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -28,9 +30,21 @@ public class ProductController {
     @Autowired
     private ProductRepo productRepo;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @GetMapping("/test")
     public String hello() {
         return "Hello from Render!";
+    }
+
+    @GetMapping("/test-product")
+    public List<Product> getAllProductsTest() {
+        List<?> rows = entityManager
+            .createNativeQuery("SELECT * FROM product")
+            .getResultList();
+        System.out.println(rows);
+        return productRepo.findAll();
     }
 
     @GetMapping

@@ -20,42 +20,73 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Entity
+@Table(name = "product")
 @Data
 @NoArgsConstructor
-@Entity
+@AllArgsConstructor
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "name", nullable = false, length = 255)
     private String name;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "brand", length = 255)
     private String brand;
     
+    @Column(name = "price", precision = 19, scale = 2)
     private BigDecimal price;
+
+    @Column(name = "discount_percent", precision = 5, scale = 2)
     private BigDecimal discountPercent;
+
+    @Column(name = "discount_price", precision = 19, scale = 2)
     private BigDecimal discountPrice;
+
+    @Column(name = "is_discounted", nullable = false)
     private Boolean isDiscounted = false;
+
+    @Column(name = "rating", nullable = true)
     private Double rating = 0.0;
+
+    @Column(name = "rating_count", nullable = true)
     private Integer ratingCount = 0;
+
+    @Column(name = "image_url", length = 512)
     private String imageUrl;
+
+    @Column(name = "stock")
     private Integer stock;
+
+    @Column(name = "sold", nullable = false)
     private Integer sold = 0;
+
+    @Column(name = "active", nullable = false)
     private Boolean active = true;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(unique = true)
+    @Column(name = "slug", unique = true, nullable = false, length = 255)
     private String slug;
 
     @ManyToOne
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -70,8 +101,7 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductReview> reviews = new ArrayList<>();
     
-    @Lob
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "description", columnDefinition = "text")
     private String description;
 
     @Transient
@@ -84,13 +114,11 @@ public class Product {
         if (this.slug == null || this.slug.isBlank()) {
             this.slug = SlugUtils.toSlug(this.name);            
         }
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        // updatedAt is handled by @UpdateTimestamp
     }
 
     public Product(ProductRequest request, Category category) {
