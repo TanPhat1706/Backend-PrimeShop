@@ -2,6 +2,7 @@ package com.primeshop.product;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -72,8 +73,9 @@ public class ProductController {
     //     return ResponseEntity.ok(productService.searchProducts(request));
     // }
 
+    @Cacheable("product")
     @GetMapping("/all-products")
-    public Page<ProductResponse> searchProducts(
+    public Page<ProductCardResponse> searchProducts(
         @ModelAttribute ProductFilterRequest request,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
@@ -88,13 +90,15 @@ public class ProductController {
         return ResponseEntity.ok(brands);
     }
 
+    @Cacheable("product")
     @GetMapping("/hot-sale")
-    public ResponseEntity<List<ProductResponse>> getHotSaleProducts() {
+    public ResponseEntity<List<ProductCardResponse>> getHotSaleProducts() {
         return ResponseEntity.ok(productService.getHotSaleProducts());
     }
 
+    @Cacheable("product")
     @GetMapping("/discount")
-    public ResponseEntity<List<ProductResponse>> getDiscountProducts() {
+    public ResponseEntity<List<ProductCardResponse>> getDiscountProducts() {
         return ResponseEntity.ok(productService.getDiscountProducts());
     }
 

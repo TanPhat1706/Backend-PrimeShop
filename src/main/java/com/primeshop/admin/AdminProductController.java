@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.primeshop.product.ProductCardResponse;
 import com.primeshop.product.ProductFilterRequest;
 import com.primeshop.product.ProductRepo;
 import com.primeshop.product.ProductRequest;
@@ -65,7 +67,7 @@ public class AdminProductController {
     }
 
     @GetMapping
-    public Page<ProductResponse> searchProducts(
+    public Page<ProductCardResponse> searchProducts(
         @ModelAttribute ProductFilterRequest request,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size

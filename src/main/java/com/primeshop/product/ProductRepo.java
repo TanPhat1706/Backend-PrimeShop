@@ -2,6 +2,8 @@ package com.primeshop.product;
 
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -16,7 +18,11 @@ public interface ProductRepo extends JpaRepository<Product, Long>, JpaSpecificat
     boolean existsBySlug(String slug);
     List<Product> findByCategorySlug(String categorySlug);
     List<Product> findByCategorySlugAndActiveTrue(String categorySlug);
+
+    @EntityGraph(attributePaths = {"category"})
+    @Query("SELECT p FROM Product p ORDER BY p.id ASC")
     List<Product> findAll();
+
     List<Product> findByActiveTrue();
     List<Product> findByActiveFalse();
 

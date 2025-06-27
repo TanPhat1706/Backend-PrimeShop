@@ -155,10 +155,10 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    public Page<ProductResponse> searchProducts(ProductFilterRequest request, Pageable pageable) {
+    public Page<ProductCardResponse> searchProducts(ProductFilterRequest request, Pageable pageable) {
         Specification<Product> spec = ProductSpecification.filter(request);
         Page<Product> products = productRepo.findAll(spec, pageable);
-        return products.map(ProductResponse::new);
+        return products.map(ProductCardResponse::new);
     }
 
     public ProductResponse getProductBySlug(String slug) {
@@ -179,14 +179,14 @@ public class ProductService {
             .collect(Collectors.toList());
     }
 
-    public List<ProductResponse> getHotSaleProducts() {
+    public List<ProductCardResponse> getHotSaleProducts() {
         List<Product> products = productRepo.findByActiveTrueOrderBySoldDesc();
-        return products.stream().map(ProductResponse::new).collect(Collectors.toList());
+        return products.stream().map(ProductCardResponse::new).collect(Collectors.toList());
     }
    
-    public List<ProductResponse> getDiscountProducts() {
+    public List<ProductCardResponse> getDiscountProducts() {
         List<Product> products = productRepo.findByIsDiscountedTrueAndActiveTrueOrderByDiscountPercentDesc();
-        return products.stream().map(ProductResponse::new).collect(Collectors.toList());
+        return products.stream().map(ProductCardResponse::new).collect(Collectors.toList());
     }
 
     public ProductResponse rateProduct(String productSlug, Double rating) {
