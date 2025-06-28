@@ -10,6 +10,7 @@ public class ProductCardResponse {
     private Long id;
     // private String code;
     private String name;
+    private String slug;
     private String brand;
     private BigDecimal price;
     private BigDecimal discountPercent;
@@ -24,6 +25,7 @@ public class ProductCardResponse {
         this.id = product.getId();
         // this.code = CodeUtils.encodeProductId(product.getId());
         this.name = product.getName();
+        this.slug = product.getSlug();
         this.brand = product.getBrand();      
         this.price = product.getPrice();
         this.discountPercent = product.getDiscountPercent();

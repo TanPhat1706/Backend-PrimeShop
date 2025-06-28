@@ -25,7 +25,7 @@ public class ProductResponse {
     private Integer stock;
     private Integer sold;
     private String category;
-    // private List<ProductSpecResponse> specs;
+    private List<ProductSpecResponse> specs;
     private String description;
 
     public ProductResponse(Product product) {
@@ -46,9 +46,9 @@ public class ProductResponse {
         this.stock = product.getStock();
         this.sold = product.getSold();
         this.category = product.getCategory().getName();
-        // this.specs = product.getSpecs().stream()
-        //     .map(ProductSpecResponse::new)
-        //     .collect(Collectors.toList());
+        this.specs = product.getSpecs().stream()
+            .map(ProductSpecResponse::new)
+            .collect(Collectors.toList());
         this.description = product.getDescription();
     }    
 }

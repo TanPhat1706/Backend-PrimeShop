@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -155,6 +156,7 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    // @Cacheable(value = "product", key = "#request.toCacheKey() + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<ProductCardResponse> searchProducts(ProductFilterRequest request, Pageable pageable) {
         Specification<Product> spec = ProductSpecification.filter(request);
         Page<Product> products = productRepo.findAll(spec, pageable);
