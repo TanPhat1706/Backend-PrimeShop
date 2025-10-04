@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.primeshop.cart.CartItem;
 import com.primeshop.category.Category;
+// import com.primeshop.stock.Business;
 import com.primeshop.utils.CodeUtils;
 import com.primeshop.utils.SlugUtils;
 import jakarta.persistence.CascadeType;
@@ -103,6 +104,14 @@ public class Product {
     
     @Column(name = "description", columnDefinition = "text")
     private String description;
+
+    
+
+    // @ManyToOne
+    // @JoinColumn(name = "business_id", nullable = false)
+    // private Business business;
+
+    private Integer returnedQuantity = 0;
 
     @Transient
     public String getCode() {

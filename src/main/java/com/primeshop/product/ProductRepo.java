@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -40,4 +41,10 @@ public interface ProductRepo extends JpaRepository<Product, Long>, JpaSpecificat
     List<Product> findByIsDiscountedTrueAndActiveTrueOrderByDiscountPercentDesc();
 
     Long countByActiveTrue();
+
+    //Chatbot
+    List<Product> findByBrand(String brand);
+
+    @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<Product> searchByName(@Param("name") String name);
 }

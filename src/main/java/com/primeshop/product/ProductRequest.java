@@ -20,6 +20,7 @@ public class ProductRequest {
     private Long categoryId;
     private List<ProductSpecResponse> specs;
     private String description;
+    // private Long businessId;
 }
 
 

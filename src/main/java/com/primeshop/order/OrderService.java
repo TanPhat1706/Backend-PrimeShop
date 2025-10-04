@@ -1,21 +1,21 @@
 package com.primeshop.order;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
 import com.primeshop.cart.Cart;
 import com.primeshop.cart.CartItem;
 import com.primeshop.cart.CartItemRepo;
 import com.primeshop.cart.CartRepo;
 import com.primeshop.product.Product;
 import com.primeshop.product.ProductRepo;
+import com.primeshop.stock.RevenueService;
 import com.primeshop.user.User;
 import com.primeshop.user.UserRepo;
 
@@ -33,6 +33,8 @@ public class OrderService {
     private ProductRepo productRepo;
     @Autowired
     private OrderRepo orderRepo;
+    @Autowired
+    private RevenueService revenueService;
 
 
     @Transactional
@@ -133,6 +135,18 @@ public class OrderService {
         
         order.setStatus(status);
         orderRepo.save(order);
+        
+        // Tự động tính toán lợi nhuận khi đơn hàng đạt trạng thái DELIVERED
+        if (status == OrderStatus.DELIVERED) {
+            // Tính toán lợi nhuận từ đơn hàng
+            BigDecimal orderRevenue = order.getTotalAmount();
+            BigDecimal orderProfit = calculateOrderProfit(order);
+            
+            // Sử dụng ngày tạo đơn hàng để xác định tháng cần cập nhật
+            String period = order.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            revenueService.updateRevenueFromOrder(orderRevenue, orderProfit, period);
+        }
+        
         return new OrderResponse(order);
     }
 
@@ -167,5 +181,28 @@ public class OrderService {
 
     public Long countByUser(Long userId) {
         return orderRepo.countByUser(userId);
+    }
+    
+    /**
+     * Tính toán lợi nhuận từ đơn hàng
+     * Lợi nhuận = Tổng doanh thu - Tổng chi phí
+     * Sử dụng ước tính chi phí dựa trên giá gốc của sản phẩm
+     */
+    private BigDecimal calculateOrderProfit(Order order) {
+        BigDecimal totalRevenue = order.getTotalAmount();
+        BigDecimal totalCost = BigDecimal.ZERO;
+        
+        // Tính tổng chi phí từ các sản phẩm trong đơn hàng
+        for (OrderItem orderItem : order.getOrderItems()) {
+            Product product = orderItem.getProduct();
+            // Sử dụng giá gốc làm ước tính chi phí (có thể điều chỉnh tỷ lệ)
+            BigDecimal unitCost = product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO;
+            // Ước tính chi phí bằng 70% giá bán (có thể điều chỉnh)
+            BigDecimal estimatedUnitCost = unitCost.multiply(BigDecimal.valueOf(0.7));
+            BigDecimal itemCost = estimatedUnitCost.multiply(BigDecimal.valueOf(orderItem.getQuantity()));
+            totalCost = totalCost.add(itemCost);
+        }
+        
+        return totalRevenue.subtract(totalCost);
     }
 }

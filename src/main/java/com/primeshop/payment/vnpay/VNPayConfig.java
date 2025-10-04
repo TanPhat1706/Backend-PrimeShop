@@ -1,4 +1,4 @@
-package com.primeshop.payment;
+package com.primeshop.payment.vnpay;
 
 import org.springframework.stereotype.Component;
 

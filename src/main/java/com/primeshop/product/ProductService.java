@@ -11,6 +11,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.primeshop.category.Category;
 import com.primeshop.category.CategoryRepo;
+// import com.primeshop.stock.Business;
+// import com.primeshop.stock.BusinessRepo;
 import com.primeshop.utils.SlugUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +30,23 @@ public class ProductService {
     private ProductImageRepo productImageRepo;
     @Autowired
     private ProductReviewRepo productReviewRepo;
+    // @Autowired
+    // private BusinessRepo businessRepo;
 
 
     public ProductResponse addProduct(ProductRequest request) {
         Category category = categoryRepo.findById(request.getCategoryId()).orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục!"));
+        
+        // Business business = null;
+        // if (request.getBusinessId() != null) {
+        //     business = businessRepo.findById(request.getBusinessId()).orElseThrow(() -> new RuntimeException("Không tìm thấy business!"));
+        // } else {
+        //     // Mặc định là business_id = 2 (hàng từ nguồn khác)
+        //     business = businessRepo.findById(2L).orElseThrow(() -> new RuntimeException("Không tìm thấy business mặc định!"));
+        // }
 
         Product product = new Product(request, category);
+        // product.setBusiness(business);
 
         String baseSlug = SlugUtils.toSlug(product.getName());
         String slug = baseSlug;
