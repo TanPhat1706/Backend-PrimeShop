@@ -59,6 +59,7 @@ public class Order {
     private String address;
     private String note;
     
+    
     @Column(name = "estimated_delivery_date")
     private LocalDateTime estimatedDeliveryDate;
 

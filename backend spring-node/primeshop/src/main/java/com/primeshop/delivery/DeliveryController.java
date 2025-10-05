@@ -53,7 +53,7 @@ public class DeliveryController {
      * Chỉ ADMIN và DELIVERY_UNIT có thể truy cập
      */
     @GetMapping("/orders/{orderId}/tracking")
-public ResponseEntity<List<TrackingResponse>> getTrackingHistory(@PathVariable Long orderId) {
+    public ResponseEntity<List<TrackingResponse>> getTrackingHistory(@PathVariable Long orderId) {
     List<DeliveryTracking> trackingHistory = deliveryService.getTrackingHistory(orderId);
     List<TrackingResponse> response = trackingHistory.stream()
             .map(TrackingResponse::new)

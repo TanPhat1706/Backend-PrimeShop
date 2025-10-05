@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.primeshop.cart.Cart;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -44,6 +45,13 @@ public class User implements UserDetails {
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String avatar;
+
+    @Column(precision = 18, scale = 2)
+    private BigDecimal balance = BigDecimal.ZERO; // Default 0.00
+    private Integer points = 0; // Điểm thưởng
+    private Double walletBalance;
+    private Double point;
+    private Boolean walletActive = false; // Trạng thái kích hoạt ví
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
