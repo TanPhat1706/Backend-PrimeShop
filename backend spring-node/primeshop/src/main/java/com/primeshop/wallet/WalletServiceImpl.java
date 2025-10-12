@@ -4,6 +4,10 @@ import com.primeshop.user.User;
 import com.primeshop.user.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.primeshop.order.Order;
+import com.primeshop.order.OrderRepo;
+import com.primeshop.order.OrderStatus;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,6 +21,9 @@ public class WalletServiceImpl implements WalletService {
     @Autowired
     private WalletTransactionRepository walletTransactionRepository;
 
+    @Autowired
+    private OrderRepo orderRepository; // <-- thêm
+
     @Override
     public WalletBalanceResponse getBalance(Long userId) {
         User user = userRepository.findById(userId)
@@ -27,28 +34,42 @@ public class WalletServiceImpl implements WalletService {
         return new WalletBalanceResponse(balance, points, walletActive);
     }
 
+    @Transactional
     @Override
     public void payOrder(Long userId, PaymentRequest request) {
+        Long orderId = request.getOrderId();
+        // load order
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // load user
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
-        double balance = user.getWalletBalance() != null ? user.getWalletBalance() : 0.0;
+
+        Double balance = user.getWalletBalance() != null ? user.getWalletBalance() : 0.0;
         if (balance < request.getAmount()) {
             throw new RuntimeException("Insufficient balance");
         }
-        // Trừ tiền
+
+        // trừ tiền
         user.setWalletBalance(balance - request.getAmount());
-        // Tích điểm: 10% giá trị đơn hàng
-        double point = user.getPoint() != null ? user.getPoint() : 0.0;
+        // tích điểm 10%
+        Double point = user.getPoint() != null ? user.getPoint() : 0.0;
         user.setPoint(point + request.getAmount() * 0.1);
         userRepository.save(user);
 
-        // Lưu giao dịch
+        // lưu giao dịch ví
         WalletTransaction tx = new WalletTransaction();
         tx.setUserId(userId);
         tx.setAmount(-request.getAmount());
         tx.setType("PAY_ORDER");
-        tx.setDescription("Thanh toán đơn hàng #" + request.getOrderId());
+        tx.setDescription("Thanh toán đơn hàng #" + orderId);
+        tx.setCreatedAt(new java.util.Date());
         walletTransactionRepository.save(tx);
+
+        // cập nhật trạng thái đơn hàng sang PAID
+        order.setStatus(OrderStatus.PAID);
+        orderRepository.save(order);
     }
 
     @Override

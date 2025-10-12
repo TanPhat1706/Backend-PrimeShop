@@ -623,4 +623,19 @@ public class VoucherController {
         public Double getOrderValue() { return orderValue; }
         public void setOrderValue(Double orderValue) { this.orderValue = orderValue; }
     }
+
+    @PutMapping("unactivate/{id}")
+    public ResponseEntity<VoucherResponse> unactivateVoucher(@PathVariable Long id) {
+        try {
+            Voucher updatedVoucher = voucherService.unactivateVoucher(id);
+            return ResponseEntity.ok(VoucherResponse.fromVoucher(updatedVoucher));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    @GetMapping("/my")
+    public List<Voucher> getMyVouchers(@RequestParam Long userId) {
+        return voucherService.getVouchersByUserId(userId);
+    }
+
 }

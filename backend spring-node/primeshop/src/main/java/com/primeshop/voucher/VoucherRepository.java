@@ -76,4 +76,5 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     List<Voucher> findVouchersNearUsageLimit();
 
     List<Voucher> findAllByCodeIn(List<String> codes);
+       List<Voucher> findByUserId(Long userId);
 }

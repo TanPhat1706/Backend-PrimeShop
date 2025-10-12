@@ -50,6 +50,8 @@ public class Voucher {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    private Long userId;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;

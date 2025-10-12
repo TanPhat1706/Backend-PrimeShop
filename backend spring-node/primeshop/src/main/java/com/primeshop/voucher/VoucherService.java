@@ -536,7 +536,23 @@ public class VoucherService {
         voucher.setMaxUsage(1);
         voucher.setCurrentUsage(0);
         voucher.setIsActive(true);
+        voucher.setUserId(userId);
         // Nếu muốn gán cho user, có thể mở rộng thêm trường userId hoặc bảng voucher_user
         return voucherRepo.save(voucher);
+    }
+    @Transactional
+    public Voucher unactivateVoucher(Long id) {
+        Optional<Voucher> voucherOpt = voucherRepo.findById(id);
+
+        if (voucherOpt.isPresent()) {
+            Voucher voucher = voucherOpt.get();
+            voucher.setIsActive(false); // setter vẫn là setIsActive
+            return voucherRepo.save(voucher);
+        }
+
+        throw new IllegalArgumentException("Voucher không tồn tại với ID: " + id);
+    }
+    public List<Voucher> getVouchersByUserId(Long userId) {
+        return voucherRepo.findByUserId(userId);
     }
 }
