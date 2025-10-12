@@ -1,8 +1,5 @@
 package com.primeshop.news;
 
-import com.primeshop.news.NewsRequest;
-import com.primeshop.news.NewsResponse;
-import com.primeshop.news.NewsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

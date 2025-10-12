@@ -1,10 +1,8 @@
-package com.primeshop.payment.vnpay;
+package com.primeshop.payment.method.vnpay;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -14,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.paypal.sdk.models.OrderStatus;
 import com.primeshop.order.OrderService;
 
 import lombok.RequiredArgsConstructor;
@@ -37,20 +33,18 @@ public class VNPayController {
 
     @GetMapping("/return")
     public ResponseEntity<?> vnpReturn(@RequestParam Map<String, String> allParams) {
-        String responseCode = allParams.get("vnp_ResponseCode");
+        PaymentCallbackResult result = vnPayService.handleReturn(allParams);
         String orderId = allParams.get("vnp_TxnRef");
 
         String redirectUrl;
-        if ("00".equals(responseCode)) {
-            orderService.updateOrderStatus(Long.parseLong(orderId), com.primeshop.order.OrderStatus.PAID);
+        if (result.isSuccess()) {
             redirectUrl = "http://localhost:5173/payment/success?orderId=" + orderId;
         } else {
-            orderService.updateOrderStatus(Long.parseLong(orderId), com.primeshop.order.OrderStatus.PAYMENT_FAILED);
             redirectUrl = "http://localhost:5173/payment/failed?orderId=" + orderId;
         }
 
         return ResponseEntity
-            .status(HttpStatus.FOUND) // 302 redirect
+            .status(HttpStatus.FOUND)
             .location(URI.create(redirectUrl))
             .build();
     }

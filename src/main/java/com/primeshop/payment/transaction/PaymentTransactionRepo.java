@@ -1,4 +1,4 @@
-package com.primeshop.payment;
+package com.primeshop.payment.transaction;
 
 import java.util.Optional;
 

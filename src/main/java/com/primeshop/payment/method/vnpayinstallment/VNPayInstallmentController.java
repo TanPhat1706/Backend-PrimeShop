@@ -1,4 +1,4 @@
-package com.primeshop.payment.vnpay;
+package com.primeshop.payment.method.vnpayinstallment;
 
 import java.util.Map;
 import java.util.Optional;

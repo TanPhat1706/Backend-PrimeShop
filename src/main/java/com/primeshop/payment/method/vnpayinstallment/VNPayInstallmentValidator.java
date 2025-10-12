@@ -1,12 +1,9 @@
-package com.primeshop.payment.vnpay;
+package com.primeshop.payment.method.vnpayinstallment;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import com.primeshop.order.Order;
 import com.primeshop.order.OrderRepo;
 import com.primeshop.order.OrderStatus;
@@ -31,12 +28,15 @@ public class VNPayInstallmentValidator {
     public ValidationResult validateInstallmentRequest(VNPayInstallmentRequest request) {
         List<String> errors = new ArrayList<>();
         
+        Order order = orderRepo.findById(request.getOrderId())
+            .orElseThrow(() -> new IllegalArgumentException("Order not found: " + request.getOrderId()));
+
         // Validate basic fields
         if (request.getOrderId() == null || request.getOrderId() <= 0) {
             errors.add("Order ID must be a positive number");
         }
         
-        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+        if (order.getTotalAmount() == null || order.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0) {
             errors.add("Amount must be greater than 0");
         }
         
@@ -53,8 +53,8 @@ public class VNPayInstallmentValidator {
         }
         
         // Validate amount
-        if (request.getAmount() != null && 
-            !installmentConfig.isValidAmount(request.getAmount())) {
+        if (order.getTotalAmount() != null && 
+            !installmentConfig.isValidAmount(order.getTotalAmount())) {
             errors.add(String.format("Amount must be between %s and %s VND",
                 installmentConfig.getMinAmount(),
                 installmentConfig.getMaxAmount()));

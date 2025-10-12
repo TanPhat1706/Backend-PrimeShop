@@ -1,7 +1,5 @@
 package com.primeshop.news;
 
-import com.primeshop.news.NewsRequest;
-import com.primeshop.news.NewsResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

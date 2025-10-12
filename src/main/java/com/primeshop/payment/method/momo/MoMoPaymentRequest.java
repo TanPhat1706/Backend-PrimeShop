@@ -1,4 +1,4 @@
-package com.primeshop.payment.momo;
+package com.primeshop.payment.method.momo;
 
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +14,7 @@ public class MoMoPaymentRequest {
     private String orderId;
     private String orderInfo;
     private String redirectUrl;
-    private String ipnUrl;       // notifyUrl
+    private String ipnUrl;
     private String requestType;
     private String signature;
     private String lang;

@@ -1,4 +1,4 @@
-package com.primeshop.payment.momo;
+package com.primeshop.payment.method.momo;
 
 import lombok.Data;
 
@@ -11,7 +11,7 @@ public class MoMoIpnRequest {
     private String orderInfo;
     private String orderType;
     private String transId;
-    private Integer resultCode; // 0 = success, khác 0 = fail
+    private Integer resultCode;
     private String message;
     private String payType;
     private Long responseTime;

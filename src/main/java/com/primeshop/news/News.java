@@ -2,8 +2,6 @@ package com.primeshop.news;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import com.primeshop.news.NewsStatus;
-import com.primeshop.news.NewsCategory;
 import com.primeshop.user.User;
 
 @Entity

@@ -3,7 +3,6 @@ package com.primeshop.product;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.primeshop.utils.CodeUtils;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

@@ -1,4 +1,4 @@
-package com.primeshop.payment.paypal;
+package com.primeshop.payment.method.paypal;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

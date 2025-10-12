@@ -1,10 +1,11 @@
-package com.primeshop.payment.momo;
+package com.primeshop.payment.method.paypal;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class MoMoRequest {
+
+public class PayPalRequest {
     private Long orderId;
 }

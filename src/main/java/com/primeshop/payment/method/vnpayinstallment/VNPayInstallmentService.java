@@ -1,4 +1,4 @@
-package com.primeshop.payment.vnpay;
+package com.primeshop.payment.method.vnpayinstallment;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -7,32 +7,26 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.primeshop.installment.InstallmentAgreement;
 import com.primeshop.installment.InstallmentAgreementRepo;
 import com.primeshop.order.Order;
 import com.primeshop.order.OrderRepo;
 import com.primeshop.order.OrderStatus;
-import com.primeshop.payment.PaymentTransaction;
-import com.primeshop.payment.PaymentTransactionRepo;
+import com.primeshop.payment.transaction.PaymentTransaction;
+import com.primeshop.payment.transaction.PaymentTransactionRepo;
 import com.primeshop.utils.PaymentCalcUtil;
 import com.primeshop.utils.VNPayUtil;
-
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class VNPayInstallmentService {
-    
     private static final Logger logger = LoggerFactory.getLogger(VNPayInstallmentService.class);
-    
     private final VNPayUtil vnPayUtil;
     private final VNPayInstallmentConfig installmentConfig;
     private final PaymentTransactionRepo paymentTransactionRepo;
@@ -47,14 +41,9 @@ public class VNPayInstallmentService {
     public VNPayInstallmentResponse createInstallmentPayment(VNPayInstallmentRequest request) {
         logger.info("Creating VNPay installment payment for order: {}", request.getOrderId());
         
-        // Validate request
-        validateInstallmentRequest(request);
-        
-        // Lấy thông tin đơn hàng
         Order order = orderRepo.findById(request.getOrderId())
             .orElseThrow(() -> new IllegalArgumentException("Order not found: " + request.getOrderId()));
         
-        // Kiểm tra trạng thái đơn hàng
         if (order.getStatus() != OrderStatus.CONFIRMED) {
             throw new IllegalStateException("Order must be confirmed before creating installment payment");
         }
@@ -62,7 +51,7 @@ public class VNPayInstallmentService {
         // Tính toán lãi suất và số tiền trả góp
         BigDecimal interestRate = installmentConfig.getInterestRate(request.getInstallmentMonths());
         BigDecimal monthlyPayment = PaymentCalcUtil.calculateMonthly(
-            request.getAmount(), 
+            order.getTotalAmount(),
             interestRate, 
             request.getInstallmentMonths()
         );
@@ -77,7 +66,7 @@ public class VNPayInstallmentService {
         String paymentUrl = createVNPayPaymentUrl(request, transaction, agreement);
         
         // Cập nhật trạng thái đơn hàng
-        order.setStatus(OrderStatus.PROCESSING);
+        // order.setStatus(OrderStatus.PROCESSING);
         orderRepo.save(order);
         
         logger.info("VNPay installment payment created successfully. Transaction ID: {}", transaction.getId());
@@ -86,7 +75,7 @@ public class VNPayInstallmentService {
             .paymentUrl(paymentUrl)
             .transactionId(transaction.getId().toString())
             .orderId(order.getId().toString())
-            .totalAmount(request.getAmount())
+            .totalAmount(order.getTotalAmount())
             .monthlyPayment(monthlyPayment)
             .installmentMonths(request.getInstallmentMonths())
             .interestRate(interestRate)
@@ -159,25 +148,25 @@ public class VNPayInstallmentService {
     /**
      * Validate request trả góp
      */
-    private void validateInstallmentRequest(VNPayInstallmentRequest request) {
-        if (!installmentConfig.isValidInstallmentMonths(request.getInstallmentMonths())) {
-            throw new IllegalArgumentException(
-                String.format("Invalid installment months: %d. Must be between %d and %d",
-                    request.getInstallmentMonths(),
-                    installmentConfig.getMinInstallmentMonths(),
-                    installmentConfig.getMaxInstallmentMonths())
-            );
-        }
+    // private void validateInstallmentRequest(VNPayInstallmentRequest request) {
+    //     if (!installmentConfig.isValidInstallmentMonths(request.getInstallmentMonths())) {
+    //         throw new IllegalArgumentException(
+    //             String.format("Invalid installment months: %d. Must be between %d and %d",
+    //                 request.getInstallmentMonths(),
+    //                 installmentConfig.getMinInstallmentMonths(),
+    //                 installmentConfig.getMaxInstallmentMonths())
+    //         );
+    //     }
         
-        if (!installmentConfig.isValidAmount(request.getAmount())) {
-            throw new IllegalArgumentException(
-                String.format("Invalid amount: %s. Must be between %s and %s VND",
-                    request.getAmount(),
-                    installmentConfig.getMinAmount(),
-                    installmentConfig.getMaxAmount())
-            );
-        }
-    }
+    //     if (!installmentConfig.isValidAmount(request.getAmount())) {
+    //         throw new IllegalArgumentException(
+    //             String.format("Invalid amount: %s. Must be between %s and %s VND",
+    //                 request.getAmount(),
+    //                 installmentConfig.getMinAmount(),
+    //                 installmentConfig.getMaxAmount())
+    //         );
+    //     }
+    // }
     
     /**
      * Tạo InstallmentAgreement
@@ -187,7 +176,7 @@ public class VNPayInstallmentService {
         InstallmentAgreement agreement = new InstallmentAgreement();
         agreement.setOrderId(order.getId());
         agreement.setUserId(order.getUser().getId());
-        agreement.setAmount(request.getAmount().multiply(new BigDecimal(100)).longValue()); // Convert to cents
+        agreement.setAmount(order.getTotalAmount().multiply(new BigDecimal(100)).longValue()); // Convert to cents
         agreement.setMonths(request.getInstallmentMonths());
         agreement.setAnnualRate(interestRate);
         agreement.setStatus("PENDING");
@@ -205,7 +194,7 @@ public class VNPayInstallmentService {
                                                       InstallmentAgreement agreement) {
         PaymentTransaction transaction = new PaymentTransaction();
         transaction.setOrderId(order.getId().toString());
-        transaction.setAmount(request.getAmount());
+        transaction.setAmount(order.getTotalAmount());
         transaction.setStatus("PENDING");
         transaction.setPaymentMethod("VNPAY_INSTALLMENT");
         transaction.setCreatedAt(LocalDateTime.now());
@@ -219,6 +208,8 @@ public class VNPayInstallmentService {
      */
     private String createVNPayPaymentUrl(VNPayInstallmentRequest request, PaymentTransaction transaction, 
                                        InstallmentAgreement agreement) {
+        Order order = orderRepo.findById(request.getOrderId())
+            .orElseThrow(() -> new IllegalArgumentException("Order not found: " + request.getOrderId()));
         String vnp_TmnCode = env.getProperty("vnpay.tmn-code");
         String vnp_Url = env.getProperty("vnpay.pay-url");
         String vnp_ReturnUrl = env.getProperty("vnpay.return-url");
@@ -228,7 +219,7 @@ public class VNPayInstallmentService {
         vnpParams.put("vnp_Version", "2.1.0");
         vnpParams.put("vnp_Command", "pay");
         vnpParams.put("vnp_TmnCode", vnp_TmnCode);
-        vnpParams.put("vnp_Amount", String.valueOf(request.getAmount().multiply(new BigDecimal(100)).longValue()));
+        vnpParams.put("vnp_Amount", String.valueOf(order.getTotalAmount().multiply(new BigDecimal(100)).longValue()));
         vnpParams.put("vnp_CurrCode", installmentConfig.getCurrency());
         vnpParams.put("vnp_TxnRef", transaction.getId().toString());
         vnpParams.put("vnp_OrderInfo", String.format("Tra gop don hang #%s - %d thang", 
@@ -269,7 +260,7 @@ public class VNPayInstallmentService {
      */
     private void handleSuccessfulPayment(PaymentTransaction transaction, String transactionNo) {
         transaction.setStatus("SUCCESS");
-        transaction.setTransactionNo(transactionNo);
+        transaction.setTransactionCode(transactionNo);
         transaction.setResponseCode("00");
         transaction.setUpdatedAt(LocalDateTime.now());
         paymentTransactionRepo.save(transaction);

@@ -1,4 +1,4 @@
-package com.primeshop.payment.momo;
+package com.primeshop.payment.method.momo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

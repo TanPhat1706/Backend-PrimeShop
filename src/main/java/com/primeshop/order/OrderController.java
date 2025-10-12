@@ -13,10 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.primeshop.payment.vnpay.VNPayInstallmentRequest;
-import com.primeshop.payment.vnpay.VNPayInstallmentResponse;
-import com.primeshop.payment.vnpay.VNPayInstallmentService;
+import com.primeshop.payment.method.vnpayinstallment.VNPayInstallmentRequest;
+import com.primeshop.payment.method.vnpayinstallment.VNPayInstallmentResponse;
+import com.primeshop.payment.method.vnpayinstallment.VNPayInstallmentService;
 
 @RestController
 @RequestMapping("/api/order")

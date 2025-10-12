@@ -1,13 +1,5 @@
 package com.primeshop.news;
 
-import com.primeshop.news.NewsRequest;
-import com.primeshop.news.NewsResponse;
-import com.primeshop.category.Category;
-import com.primeshop.news.News;
-import com.primeshop.news.NewsStatus;
-import com.primeshop.news.NewsCategory;
-import com.primeshop.news.NewsRepository;
-import com.primeshop.news.NewsService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
