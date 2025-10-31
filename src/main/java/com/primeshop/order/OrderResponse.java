@@ -22,6 +22,8 @@ public class OrderResponse {
     private String address;
     private String note;
     private boolean isAdmin;
+    private Long sellerId;
+    private String shopName;
     private List<OrderItemResponse> orderItems;
 
     public OrderResponse(Order order) {
@@ -40,5 +42,7 @@ public class OrderResponse {
         this.note = order.getNote();
         this.isAdmin = order.getUser().getRoles().stream()
                 .anyMatch(role -> role.getName().toString().contains("ADMIN"));
+        this.sellerId = order.getSeller().getId();
+        this.shopName = order.getSeller().getShopName();
     }
 }

@@ -1,9 +1,7 @@
 package com.primeshop.stock;
 
 import java.time.LocalDateTime;
-
 import com.primeshop.product.Product;
-
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;

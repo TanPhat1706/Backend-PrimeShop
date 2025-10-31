@@ -148,6 +148,16 @@
 			<artifactId>rest-api-sdk</artifactId>
 			<version>1.14.0</version> <!-- Phiên bản mới nhất tại thời điểm hiện tại -->
 		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+			<version>10.21.0</version> <!-- hoặc bản mới nhất -->
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-sqlserver</artifactId>
+			<version>10.21.0</version>
+		</dependency>
  	</dependencies>
 
 	<build>

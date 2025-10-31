@@ -15,10 +15,11 @@ import com.primeshop.cart.CartItemRepo;
 import com.primeshop.cart.CartRepo;
 import com.primeshop.product.Product;
 import com.primeshop.product.ProductRepo;
+import com.primeshop.seller.SellerProfile;
+import com.primeshop.seller.SellerRepo;
 import com.primeshop.stock.RevenueService;
 import com.primeshop.user.User;
 import com.primeshop.user.UserRepo;
-
 import jakarta.transaction.Transactional;
 
 @Service
@@ -35,6 +36,8 @@ public class OrderService {
     private OrderRepo orderRepo;
     @Autowired
     private RevenueService revenueService;
+    @Autowired
+    private SellerRepo sellerRepo;
 
 
     @Transactional
@@ -100,6 +103,17 @@ public class OrderService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found!"));
         return orderRepo.findByUser(user).stream()
+                .map(OrderResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<OrderResponse> getOrdersBySeller() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found!"));
+        SellerProfile seller = sellerRepo.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Tài khoản hiện tại không phải là người bán!"));
+        List<Order> orders = orderRepo.findBySellerId(seller.getId());
+        return orders.stream()
                 .map(OrderResponse::new)
                 .collect(Collectors.toList());
     }

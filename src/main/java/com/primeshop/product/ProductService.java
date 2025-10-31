@@ -10,8 +10,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.primeshop.category.Category;
 import com.primeshop.category.CategoryRepo;
-// import com.primeshop.stock.Business;
-// import com.primeshop.stock.BusinessRepo;
+import com.primeshop.product.Product.ProductStatus;
+import com.primeshop.seller.SellerProfile;
+import com.primeshop.seller.SellerRepo;
+import com.primeshop.user.User;
+import com.primeshop.utils.SecurityUtils;
 import com.primeshop.utils.SlugUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,35 +32,28 @@ public class ProductService {
     private ProductImageRepo productImageRepo;
     @Autowired
     private ProductReviewRepo productReviewRepo;
-    // @Autowired
-    // private BusinessRepo businessRepo;
+    @Autowired
+    private SellerRepo sellerRepo;
+    @Autowired
+    private SecurityUtils securityUtils;
 
 
-    public ProductResponse addProduct(ProductRequest request) {
-        Category category = categoryRepo.findById(request.getCategoryId()).orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục!"));
-        
-        // Business business = null;
-        // if (request.getBusinessId() != null) {
-        //     business = businessRepo.findById(request.getBusinessId()).orElseThrow(() -> new RuntimeException("Không tìm thấy business!"));
-        // } else {
-        //     // Mặc định là business_id = 2 (hàng từ nguồn khác)
-        //     business = businessRepo.findById(2L).orElseThrow(() -> new RuntimeException("Không tìm thấy business mặc định!"));
-        // }
-
+    public ProductResponse addProduct(ProductRequest request, Long sellerId) {
+        Category category = categoryRepo.findById(request.getCategoryId())
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục!"));
+        SellerProfile seller = sellerRepo.findById(sellerId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy người bán!"));
         Product product = new Product(request, category);
-        // product.setBusiness(business);
-
+        product.setSeller(seller);
         String baseSlug = SlugUtils.toSlug(product.getName());
         String slug = baseSlug;
         int counter = 1;
-
         while (productRepo.existsBySlug(slug)) {
             slug = baseSlug + "-" + counter;
             counter++;
         }
         product.setSlug(slug);
         Product saved = productRepo.save(product);
-
         List<ProductSpec> specs = request.getSpecs().stream()
             .map(spec -> new ProductSpec(null, spec.getName(), spec.getValue(), product))
             .collect(Collectors.toList());
@@ -71,9 +67,14 @@ public class ProductService {
 
     @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest request) {
+        User user = securityUtils.getCurrentUser();
+        SellerProfile seller = sellerRepo.findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Tài khoản hiện tại không phải là người bán!"));
         Product product = productRepo.findById(id)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm!"));
-        
+        if (!product.getSeller().getId().equals(seller.getId())) {
+            throw new RuntimeException("Bạn không có quyền cập nhật sản phẩm này!");
+        }
         if (request.getName() != null) {
             product.setName(request.getName());
             String baseSlug = SlugUtils.toSlug(request.getName());
@@ -129,6 +130,7 @@ public class ProductService {
             productSpecRepo.saveAll(specs);
         }
 
+        product.setStatus(ProductStatus.PENDING);
         productRepo.save(product);
         return new ProductResponse(product);
     }

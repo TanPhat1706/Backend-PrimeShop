@@ -1,6 +1,10 @@
 frontend:
   url: http://localhost:5173
 
+jwt:
+  secret: "day-la-mot-cai-key-bi-mat-rat-dai-va-phuc-tap-khong-ai-doan-duoc-123456"
+  expiration: 86400000
+
 vnpay:
   tmn-code: P8WZY8S4
   secret-key: AYAZFPB4UZMSBE23W110JC1WPVMG0DOV

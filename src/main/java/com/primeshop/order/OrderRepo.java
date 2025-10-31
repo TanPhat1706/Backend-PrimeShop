@@ -15,6 +15,8 @@ public interface OrderRepo extends JpaRepository<Order, Long>, JpaSpecificationE
 
     List<Order> findByUser(User user);
 
+    List<Order> findBySellerId(Long sellerId);
+
     Order findByPaypalPaymentId(String paypalOrderId);
 
     @Query("SELECT COUNT(o) FROM Order o")

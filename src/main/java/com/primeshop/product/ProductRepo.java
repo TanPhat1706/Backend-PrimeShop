@@ -47,4 +47,6 @@ public interface ProductRepo extends JpaRepository<Product, Long>, JpaSpecificat
 
     @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     List<Product> searchByName(@Param("name") String name);
+
+    Optional<Product> findBySellerId(Long sellerId);
 }
