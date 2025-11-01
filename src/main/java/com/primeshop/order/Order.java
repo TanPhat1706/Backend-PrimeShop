@@ -46,6 +46,7 @@ public class Order {
     private User user;
 
     private BigDecimal totalAmount;
+    private BigDecimal finalAmount;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
@@ -71,5 +72,14 @@ public class Order {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    @Enumerated(EnumType.STRING)
+    private PaymentType paymentType; // CASH, CARD, BNPL
+
+    // private boolean bnplFlag = false; // true nếu là trả sau (Fundiin)
+
+    public enum PaymentType {
+        CASH, CARD, BNPL
     }
 }
