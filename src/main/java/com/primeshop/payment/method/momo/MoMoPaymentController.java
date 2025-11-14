@@ -13,9 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.primeshop.config.MoMoConfig;
-import com.primeshop.order.OrderRepo;
-import com.primeshop.order.OrderService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -26,9 +23,6 @@ import lombok.RequiredArgsConstructor;
 public class MoMoPaymentController {
     
     private final MoMoPaymentService moMoPaymentService;
-    private final OrderService orderService;
-    private final MoMoConfig config;
-    private final OrderRepo orderRepo;
     @Value("${frontend.url}")
     private String frontendBaseUrl;
 

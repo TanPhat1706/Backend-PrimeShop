@@ -11,9 +11,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
-import com.primeshop.order.OrderRepo;
-import com.primeshop.order.OrderService;
 import com.primeshop.payment.method.vnpay.PaymentCallbackResult;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +22,6 @@ import lombok.RequiredArgsConstructor;
 public class PayPalController {
 
     private final PayPalService payPalService;
-    private final OrderRepo orderRepo;
-    private final OrderService orderService;
-    private static final RestTemplate restTemplate = new RestTemplate();
 
     @PostMapping("/create")
     public ResponseEntity<?> createOrder(@RequestBody PayPalRequest request) throws Exception {

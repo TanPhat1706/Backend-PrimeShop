@@ -37,12 +37,12 @@ public class SellerController {
     }
 
     @PostMapping("/add-product")
-    @PreAuthorize("hasRole('SELLER')")
+    @PreAuthorize("hasRole('BUSSINESS')")
     public ResponseEntity<?> addProduct(@RequestBody ProductRequest request, @RequestParam Long sellerId) {
         return ResponseEntity.ok(productService.addProduct(request, sellerId));
     }
 
-    @PreAuthorize("hasRole('SELLER')")
+    @PreAuthorize("hasRole('BUSSINESS')")
     @GetMapping("/products")
     public Page<ProductCardResponse> getSellerProducts(
             @ModelAttribute ProductFilterRequest request,
@@ -56,15 +56,21 @@ public class SellerController {
         return productService.searchProducts(request, pageable);
     }
 
-    @PreAuthorize("hasRole('SELLER')")
+    @PreAuthorize("hasRole('BUSSINESS')")
     @PatchMapping("/update-product")
     public ResponseEntity<?> updateProduct(@RequestParam Long id, @RequestBody ProductRequest request) {
         return ResponseEntity.ok(productService.updateProduct(id, request));
     }
 
-    @PreAuthorize("hasRole('SELLER')")
+    @PreAuthorize("hasRole('BUSSINESS')")
     @GetMapping("/orders")
     public ResponseEntity<?> getSellerOrders() {
+        return ResponseEntity.ok(orderService.getOrdersBySeller());
+    }
+
+    @PreAuthorize("hasRole('BUSSINESS')")
+    @GetMapping("/me")
+    public ResponseEntity<?> getSellerProfile() {
         return ResponseEntity.ok(orderService.getOrdersBySeller());
     }
 }

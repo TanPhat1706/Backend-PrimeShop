@@ -3,6 +3,7 @@ package com.primeshop.product;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.primeshop.seller.SellerResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -26,6 +27,7 @@ public class ProductResponse {
     private String category;
     private List<ProductSpecResponse> specs;
     private String description;
+    private SellerResponse seller;
 
     public ProductResponse(Product product) {
         this.id = product.getId();
@@ -49,5 +51,6 @@ public class ProductResponse {
             .map(ProductSpecResponse::new)
             .collect(Collectors.toList());
         this.description = product.getDescription();
+        this.seller = new SellerResponse(product.getSeller());
     }    
 }

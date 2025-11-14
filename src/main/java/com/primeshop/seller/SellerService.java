@@ -1,13 +1,8 @@
 package com.primeshop.seller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import com.primeshop.order.OrderResponse;
 import com.primeshop.product.Product;
 import com.primeshop.product.ProductRepo;
 import com.primeshop.product.ProductResponse;
@@ -17,6 +12,7 @@ import com.primeshop.user.Role;
 import com.primeshop.user.RoleRepo;
 import com.primeshop.user.User;
 import com.primeshop.user.UserRepo;
+import com.primeshop.utils.SecurityUtils;
 
 @Service
 public class SellerService {
@@ -46,7 +42,7 @@ public class SellerService {
             throw new IllegalArgumentException("Seller profile already exists for this user");
         }
 
-        Role sellerRole = roleRepo.findByName(Role.RoleName.ROLE_SELLER)
+        Role sellerRole = roleRepo.findByName(Role.RoleName.ROLE_BUSSINESS)
             .orElseThrow(() -> new RuntimeException("Role không tồn tại trong hệ thống"));
 
 

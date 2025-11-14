@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.primeshop.order.OrderService;
-
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 public class VNPayController {
     
     private final VNPayService vnPayService;
-    private final OrderService orderService;
 
     @PostMapping("/create")
     public ResponseEntity<?> createPayment(@RequestBody PaymentRequest request) throws UnsupportedEncodingException {
