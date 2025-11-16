@@ -2,6 +2,7 @@ package com.primeshop.product;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.primeshop.user.User;
 
 import jakarta.persistence.Column;
@@ -26,6 +27,7 @@ public class ProductReview {
 
     @ManyToOne
     @JoinColumn(name = "product_id")
+    @JsonIgnore
     private Product product;
 
     @ManyToOne

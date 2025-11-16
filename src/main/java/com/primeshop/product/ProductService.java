@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import com.primeshop.category.CategoryRepo;
 import com.primeshop.utils.SlugUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -250,4 +252,9 @@ public class ProductService {
     public Double getAverageRating(Long productId) {
         return productReviewRepo.findAverageRatingByProductId(productId);
     }
+
+    public List<ProductCardResponse> getRecommendedProducts(Long userId, Set<Long> categoryIds, int limit) {
+    List<Product> products = productRepo.findRecommendedProducts(categoryIds, userId, PageRequest.of(0, limit));
+    return products.stream().map(ProductCardResponse::new).collect(Collectors.toList());
+}
 }
