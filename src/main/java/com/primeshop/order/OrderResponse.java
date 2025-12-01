@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.primeshop.seller.SellerProfile;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -42,7 +44,12 @@ public class OrderResponse {
         this.note = order.getNote();
         this.isAdmin = order.getUser().getRoles().stream()
                 .anyMatch(role -> role.getName().toString().contains("ADMIN"));
-        this.sellerId = order.getSeller().getId();
-        this.shopName = order.getSeller().getShopName();
+        SellerProfile seller = order.getSeller();
+        if (seller != null) {
+            this.sellerId = seller.getId();
+        } else {
+            this.sellerId = null;
+            System.out.println("WARNING: Order ID " + order.getId() + " không có seller.");
+        }
     }
 }

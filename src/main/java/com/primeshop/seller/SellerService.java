@@ -12,7 +12,6 @@ import com.primeshop.user.Role;
 import com.primeshop.user.RoleRepo;
 import com.primeshop.user.User;
 import com.primeshop.user.UserRepo;
-import com.primeshop.utils.SecurityUtils;
 
 @Service
 public class SellerService {
@@ -38,7 +37,8 @@ public class SellerService {
         if (user == null) {
             throw new IllegalArgumentException("User not found");
         }
-        if (sellerRepo.findByUserId(user.getId()) != null) {
+        System.out.println("============================" + user.getId());
+        if (!sellerRepo.findByUserId(user.getId()).isEmpty()) {
             throw new IllegalArgumentException("Seller profile already exists for this user");
         }
 
@@ -84,5 +84,12 @@ public class SellerService {
         product.setStatus(ProductStatus.APPROVED);
         productRepo.save(product);
         return new ProductResponse(product);
+    }
+
+    public SellerResponse getSellerProfile() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepo.findByUsername(username).orElseThrow();
+        return new SellerResponse(sellerRepo.findByUserId(user.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Seller profile not found")));
     }
 }

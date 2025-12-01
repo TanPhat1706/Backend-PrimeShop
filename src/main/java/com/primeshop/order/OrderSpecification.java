@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
 import com.primeshop.user.User;
 import com.primeshop.utils.SecurityUtils;
-
 import jakarta.persistence.criteria.Predicate;
 
 public class OrderSpecification {
@@ -39,6 +38,5 @@ public class OrderSpecification {
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
-
     }
 }

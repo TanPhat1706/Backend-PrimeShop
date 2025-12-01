@@ -159,4 +159,9 @@ public class NewsServiceImpl implements NewsService {
         return newsCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException(CATEGORY_NOT_FOUND));
     }
+
+    @Override
+    public long countNews() {
+        return newsRepository.count();
+    }
 }

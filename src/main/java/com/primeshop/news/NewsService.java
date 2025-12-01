@@ -15,4 +15,6 @@ public interface NewsService {
     NewsResponse updateNews(Long id, NewsRequest newsRequest);
 
     boolean deleteNews(Long id);
+
+    long countNews();
 }

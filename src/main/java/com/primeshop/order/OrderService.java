@@ -20,6 +20,9 @@ import com.primeshop.seller.SellerRepo;
 import com.primeshop.stock.RevenueService;
 import com.primeshop.user.User;
 import com.primeshop.user.UserRepo;
+import com.primeshop.voucher.Voucher;
+import com.primeshop.voucher.VoucherService;
+import java.util.Optional;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -39,6 +42,14 @@ public class OrderService {
     @Autowired
     private SellerRepo sellerRepo;
 
+    @Autowired
+    private VoucherService voucherService;
+
+    private final OrderRepo orderRepository;
+
+    public OrderService(OrderRepo orderRepository) {
+        this.orderRepository = orderRepository;
+    }
 
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
@@ -75,10 +86,67 @@ public class OrderService {
             totalAmount = totalAmount.add(orderItem.getTotalPrice());
         }
 
+        // Xử lý voucher - LUÔN TĂNG USED_COUNT KHI ĐẶT HÀNG
+        List<Voucher> appliedVouchers = new ArrayList<>();
+        List<String> voucherCodesToProcess = new ArrayList<>();
+        
+        // Thu thập voucher codes từ cả request và cart
+        if (request.getVoucherCodes() != null && !request.getVoucherCodes().isEmpty()) {
+            System.out.println("🔄 Vouchers from request: " + request.getVoucherCodes());
+            voucherCodesToProcess.addAll(request.getVoucherCodes());
+        }
+        
+        // Nếu không có voucher từ request, lấy từ cart
+        if (voucherCodesToProcess.isEmpty()) {
+            List<Voucher> cartVouchers = cart.getVouchers();
+            if (cartVouchers != null && !cartVouchers.isEmpty()) {
+                System.out.println("🛒 Vouchers from cart: " + cartVouchers.size() + " vouchers");
+                voucherCodesToProcess = cartVouchers.stream()
+                    .map(Voucher::getCode)
+                    .collect(Collectors.toList());
+            }
+        }
+        
+        // Xử lý tất cả voucher codes (tăng used_count)
+        if (!voucherCodesToProcess.isEmpty()) {
+            System.out.println("🎯 Processing vouchers for order (WILL INCREASE USED_COUNT): " + voucherCodesToProcess);
+            
+            try {
+                // Sử dụng method để tăng used_count
+                appliedVouchers = voucherService.processVouchersForOrder(
+                    voucherCodesToProcess, 
+                    totalAmount.doubleValue()
+                );
+                
+                System.out.println("✅ Vouchers processed and used_count increased: " + appliedVouchers.size() + " vouchers");
+                
+                // Log chi tiết từng voucher đã xử lý
+                for (Voucher voucher : appliedVouchers) {
+                    System.out.println("📝 Voucher applied to order: " + voucher.getCode() + 
+                                     " (used_count: " + voucher.getCurrentUsage() + 
+                                     ", max_usage: " + voucher.getMaxUsage() + ")");
+                }
+                
+            } catch (RuntimeException e) {
+                System.err.println("❌ Voucher processing failed: " + e.getMessage());
+                e.printStackTrace(); // In stack trace để debug
+                throw e; // Re-throw để rollback transaction
+            }
+        } else {
+            System.out.println("ℹ️ No vouchers to process");
+        }
+
+        // Tính discountAmount tổng hợp nếu cần
+        BigDecimal discountAmount = cart.getDiscount() != null ? cart.getDiscount() : BigDecimal.ZERO;
+        BigDecimal finalAmount = totalAmount.subtract(discountAmount).max(BigDecimal.ZERO);
+
         Order order = new Order();
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
         order.setTotalAmount(totalAmount);
+        order.setDiscountAmount(discountAmount);
+        order.setFinalAmount(finalAmount);
+        order.setVouchers(appliedVouchers); // <-- Gán danh sách voucher
         order.setOrderItems(orderItems);
         order.setFullName(request.getFullName());
         order.setPhoneNumber(request.getPhoneNumber());
@@ -168,11 +236,16 @@ public class OrderService {
         switch (currentStatus) {
             case PENDING: return newStatus == OrderStatus.CONFIRMED || newStatus == OrderStatus.CANCELLED;
             case CONFIRMED: return newStatus == OrderStatus.PAID || newStatus == OrderStatus.PAYMENT_FAILED || newStatus == OrderStatus.CANCELLED;
-            case PAID: return newStatus == OrderStatus.SHIPPED;
+            case PAID: return newStatus == OrderStatus.PROCESSING || newStatus == OrderStatus.CANCELLED;
             case PAYMENT_FAILED: return newStatus == OrderStatus.CONFIRMED || newStatus == OrderStatus.CANCELLED;
-            case PROCESSING: return newStatus == OrderStatus.SHIPPED || newStatus == OrderStatus.CANCELLED;
-            case SHIPPED: return newStatus == OrderStatus.DELIVERED;
-            case DELIVERED, CANCELLED: return false;
+            case PROCESSING: return newStatus == OrderStatus.INVENTORY || newStatus == OrderStatus.CANCELLED;
+            case INVENTORY: return newStatus == OrderStatus.READY_TO_SHIP || newStatus == OrderStatus.CANCELLED;
+            case READY_TO_SHIP: return newStatus == OrderStatus.SHIPPING || newStatus == OrderStatus.CANCELLED;
+            case SHIPPING: return newStatus == OrderStatus.SHIPPED || newStatus == OrderStatus.CANCELLED;
+            case SHIPPED: return newStatus == OrderStatus.DELIVERED || newStatus == OrderStatus.CANCELLED;
+            case DELIVERED: return newStatus == OrderStatus.CANCELLED;
+            case CANCELLED: return false;
+            case FAILED_DELIVERY: return false;
             default: throw new IllegalArgumentException("Unknown status: " + currentStatus);
         }
     }
@@ -218,5 +291,26 @@ public class OrderService {
         }
         
         return totalRevenue.subtract(totalCost);
+    }
+
+    public boolean updateOrderStatus(Long orderId, String status) {
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (optionalOrder.isEmpty()) return false;
+        Order order = optionalOrder.get();
+
+        // Kiểm tra trước khi set
+        order.setStatus(OrderStatus.valueOf(status));
+
+        orderRepository.save(order);
+        return true;
+    }
+
+    private boolean isValidStatus(String status) {
+        List<String> allowedStatuses = List.of(
+            "READY_TO_SHIP", "PROCESSING", "INVENTORY", "SHIPPING",
+            "SHIPPED", "DELIVERED", "RETURNED", "REFUNDED",
+            "FAILED_DELIVERY", "CANCELLED", "COMPLETED"
+        );
+        return allowedStatuses.contains(status);
     }
 }

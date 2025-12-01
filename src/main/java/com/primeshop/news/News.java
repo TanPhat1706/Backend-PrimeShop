@@ -11,12 +11,12 @@ public class News {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String title;
 
     private String slug;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String excerpt;
 
     @Column(name = "image_url")

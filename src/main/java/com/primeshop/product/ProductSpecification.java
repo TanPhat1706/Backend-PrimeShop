@@ -3,9 +3,7 @@ package com.primeshop.product;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
-
 import com.primeshop.product.Product.ProductStatus;
-
 import jakarta.persistence.criteria.Predicate;
 
 public class ProductSpecification {

@@ -127,7 +127,7 @@ public class MoMoPaymentService {
         }
 
         String resultCode = params.get("resultCode");
-        PaymentTransaction tx = paymentTransactionRepo.findByOrderId(order.getId().toString()).orElse(null);
+        PaymentTransaction tx = paymentTransactionRepo.findFirstByOrderIdOrderByCreatedAtDesc(order.getId().toString()).orElse(null);
         if ("0".equals(resultCode)) {
             orderService.updateOrderStatus(orderId, OrderStatus.PAID);
             if (tx != null) {

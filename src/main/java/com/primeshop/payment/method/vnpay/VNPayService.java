@@ -75,7 +75,7 @@ public class VNPayService {
         boolean valid = expectedHash.equals(receivedHash);
 
         String orderId = vnpParams.get("vnp_TxnRef");
-        PaymentTransaction tx = paymentTransactionRepo.findByOrderId(orderId).orElse(null);
+        PaymentTransaction tx = paymentTransactionRepo.findFirstByOrderIdOrderByCreatedAtDesc(orderId).orElse(null);
 
         if (tx == null) {
             return PaymentCallbackResult.invalid("Không tìm thấy giao dịch thanh toán");

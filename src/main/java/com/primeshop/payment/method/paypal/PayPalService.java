@@ -140,7 +140,7 @@ public class PayPalService {
                 return PaymentCallbackResult.invalid("Order not found for PayPal orderId: " + orderId);
             }
 
-            PaymentTransaction tx = paymentTransactionRepo.findByOrderId(order.getId().toString()).orElse(null);
+            PaymentTransaction tx = paymentTransactionRepo.findFirstByOrderIdOrderByCreatedAtDesc(order.getId().toString()).orElse(null);
 
             if (paypalResponse.getStatusCode().is2xxSuccessful()
                     && paypalResponse.getBody() != null

@@ -104,7 +104,7 @@ public class VNPayInstallmentService {
         
         try {
             // Tìm PaymentTransaction
-            Optional<PaymentTransaction> transactionOpt = paymentTransactionRepo.findByOrderId(orderId);
+            Optional<PaymentTransaction> transactionOpt = paymentTransactionRepo.findFirstByOrderIdOrderByCreatedAtDesc(orderId);
             if (transactionOpt.isEmpty()) {
                 logger.error("Payment transaction not found for order: {}", orderId);
                 return false;

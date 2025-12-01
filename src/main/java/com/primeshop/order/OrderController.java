@@ -3,6 +3,7 @@ package com.primeshop.order;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.primeshop.payment.method.vnpayinstallment.VNPayInstallmentRequest;
 import com.primeshop.payment.method.vnpayinstallment.VNPayInstallmentResponse;
 import com.primeshop.payment.method.vnpayinstallment.VNPayInstallmentService;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/order")
@@ -101,4 +104,26 @@ public class OrderController {
             ));
         }
     }
+
+    @PutMapping("/update-status")
+    public ResponseEntity<?> updateStatus(
+            @RequestParam Long id, 
+            @RequestParam String status) {
+
+        try {
+            boolean updated = orderService.updateOrderStatus(id, status);
+
+            if (updated) {
+                return ResponseEntity.ok(Map.of("message", "Cập nhật trạng thái thành công"));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Không tìm thấy đơn hàng hoặc trạng thái không hợp lệ"));
+            }
+        } catch (Exception e) {
+            // Log lỗi chi tiết ở đây nếu cần
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi hệ thống khi cập nhật trạng thái"));
+        }
+    }
+
 }

@@ -115,8 +115,6 @@ public class Product {
     @Column(name = "description", columnDefinition = "text")
     private String description;
 
-    
-
     // @ManyToOne
     // @JoinColumn(name = "business_id", nullable = false)
     // private Business business;
@@ -137,7 +135,7 @@ public class Product {
 
     @PreUpdate
     protected void onUpdate() {
-        // updatedAt is handled by @UpdateTimestamp
+        this.updatedAt = LocalDateTime.now();
     }
 
     public Product(ProductRequest request, Category category) {

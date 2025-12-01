@@ -71,6 +71,6 @@ public class SellerController {
     @PreAuthorize("hasRole('BUSSINESS')")
     @GetMapping("/me")
     public ResponseEntity<?> getSellerProfile() {
-        return ResponseEntity.ok(orderService.getOrdersBySeller());
+        return ResponseEntity.ok(sellerService.getSellerProfile());
     }
 }
