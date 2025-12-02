@@ -19,10 +19,8 @@ public class Bank {
 
     private String bankName = "Vietcombank";
 
-    @Lob
     private byte[] accountNumber;
 
-    @Lob
     private byte[] token;
 
     private String status = "linked";

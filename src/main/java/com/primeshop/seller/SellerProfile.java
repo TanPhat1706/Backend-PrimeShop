@@ -19,12 +19,11 @@ public class SellerProfile {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
+    @Column(nullable = false)
     private String shopName;
 
     private String identityCard;
 
-    @Column(columnDefinition = "NVARCHAR(1000)")
     private String description;
 
     private String phone;
