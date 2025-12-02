@@ -15,6 +15,7 @@ public class News {
 
     private String slug;
 
+    @Column(columnDefinition = "TEXT")
     private String excerpt;
 
     @Column(name = "image_url")

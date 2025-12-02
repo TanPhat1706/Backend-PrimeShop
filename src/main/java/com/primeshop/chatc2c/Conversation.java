@@ -21,7 +21,7 @@ public class Conversation {
 
     private LocalDateTime createdAt;
 
-    @Column(nullable = false, columnDefinition = "VARCHAR(MAX) DEFAULT ''")
+    @Column(nullable = false, columnDefinition = "TEXT DEFAULT ''")
     private String lastMessage;
 
     private LocalDateTime lastMessageAt;
