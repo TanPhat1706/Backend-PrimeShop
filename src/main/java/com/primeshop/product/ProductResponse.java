@@ -28,6 +28,7 @@ public class ProductResponse {
     private List<ProductSpecResponse> specs;
     private String description;
     private SellerResponse seller;
+    private Long sellerId;
 
     public ProductResponse(Product product) {
         this.id = product.getId();
@@ -52,5 +53,6 @@ public class ProductResponse {
             .collect(Collectors.toList());
         this.description = product.getDescription();
         this.seller = new SellerResponse(product.getSeller());
+        this.sellerId = product.getSeller().getUser().getId();
     }    
 }
