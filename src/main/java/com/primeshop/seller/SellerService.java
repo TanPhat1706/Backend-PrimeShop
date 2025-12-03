@@ -1,5 +1,8 @@
 package com.primeshop.seller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -91,5 +94,67 @@ public class SellerService {
         User user = userRepo.findByUsername(username).orElseThrow();
         return new SellerResponse(sellerRepo.findByUserId(user.getId())
             .orElseThrow(() -> new IllegalArgumentException("Seller profile not found")));
+    }
+
+    // [ADD] Hàm nghiệp vụ: Lấy danh sách người bán đang chờ duyệt (PENDING_REVIEW)
+    public List<SellerResponse> getPendingSellers() {
+        List<SellerProfile> pendingSellers = sellerRepo.findByStatus(SellerStatus.PENDING_REVIEW);
+        return pendingSellers.stream()
+                .map(SellerResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    // [ADD] Hàm nghiệp vụ: Lấy danh sách TẤT CẢ sản phẩm đang chờ duyệt (PENDING)
+    // Admin cần xem toàn bộ sản phẩm mới đăng của sàn để duyệt
+    public List<ProductResponse> getPendingProducts() {
+        List<Product> pendingProducts = productRepo.findByStatus(ProductStatus.PENDING);
+        return pendingProducts.stream()
+                .map(ProductResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    public SellerResponse banSeller(Long sellerId) {
+        SellerProfile sellerProfile = sellerRepo.findById(sellerId)
+            .orElseThrow(() -> new IllegalArgumentException("Seller profile not found"));
+        
+        // Cập nhật trạng thái sang BANNED_SELLER
+        sellerProfile.setStatus(SellerStatus.BANNED_SELLER);
+        
+        // Lưu thay đổi xuống Database
+        sellerRepo.save(sellerProfile);
+        
+        return new SellerResponse(sellerProfile);
+    }
+
+    // [ADD] Hàm nghiệp vụ: Từ chối duyệt sản phẩm (REJECTED)
+    // Dùng khi sản phẩm vi phạm chính sách, ảnh mờ, thông tin sai lệch...
+    public ProductResponse rejectProduct(Long sellerId, Long productId) {
+        // Kiểm tra Seller có tồn tại
+        SellerProfile sellerProfile = sellerRepo.findById(sellerId)
+            .orElseThrow(() -> new IllegalArgumentException("Seller profile not found"));
+        
+        // Kiểm tra Product có tồn tại
+        Product product = productRepo.findById(productId)
+            .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+
+        // Chỉ từ chối được sản phẩm đang chờ duyệt
+        if (product.getStatus() != ProductStatus.PENDING) {
+             throw new IllegalArgumentException("Product is not in pending status");
+        }
+
+        // Cập nhật trạng thái
+        product.setStatus(ProductStatus.REJECTED);
+        productRepo.save(product);
+        
+        return new ProductResponse(product);
+    }
+
+    // [ADD] Hàm nghiệp vụ: Lấy tất cả Seller (Dùng cho Tab "Tất cả doanh nghiệp")
+    public List<SellerResponse> getAllSellers() {
+        // findAll() là hàm có sẵn của JPA, không cần viết thêm trong Repo
+        List<SellerProfile> allSellers = sellerRepo.findAll();
+        return allSellers.stream()
+                .map(SellerResponse::new)
+                .collect(Collectors.toList());
     }
 }

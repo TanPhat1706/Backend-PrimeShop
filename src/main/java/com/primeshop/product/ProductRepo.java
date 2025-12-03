@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.primeshop.product.Product.ProductStatus;
+
 @Repository
 public interface ProductRepo extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
     Optional<Product> findById(Long id);
@@ -48,4 +50,6 @@ public interface ProductRepo extends JpaRepository<Product, Long>, JpaSpecificat
     List<Product> searchByName(@Param("name") String name);
 
     Optional<Product> findBySellerId(Long sellerId);
+
+    List<Product> findByStatus(ProductStatus status);
 }
