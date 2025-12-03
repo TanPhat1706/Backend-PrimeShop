@@ -20,7 +20,7 @@ public interface ProductRepo extends JpaRepository<Product, Long>, JpaSpecificat
     List<Product> findByCategorySlugAndActiveTrue(String categorySlug);
 
     @EntityGraph(attributePaths = {"category"})
-    @Query("SELECT p FROM Product p ORDER BY p.id ASC")
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.seller ORDER BY p.id ASC")
     List<Product> findAll();
 
     List<Product> findByActiveTrue();
