@@ -78,8 +78,8 @@ public class PayPalService {
                 )
             )),
             "application_context", Map.of(
-                "return_url", "https://localhost:8080/api/payment/paypal/return",
-                "cancel_url", "https://localhost:8080/api/payment/paypal/cancel"
+                "return_url", "https://backend-primeshop.onrender.com/api/payment/paypal/return",
+                "cancel_url", "https://backend-primeshop.onrender.com/api/payment/paypal/cancel"
             )
         );
 

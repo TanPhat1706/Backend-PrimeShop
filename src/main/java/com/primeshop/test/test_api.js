@@ -25,7 +25,7 @@ export const options = {
 // 2. Logic của từng Virtual User (VU)
 export default function () {
   // Định nghĩa URL Localhost
-  const url = 'http://localhost:8080/api/orders';
+  const url = 'https://backend-primeshop.onrender.com/api/orders';
 
   // Định nghĩa Payload (Body gửi đi)
   const payload = JSON.stringify({

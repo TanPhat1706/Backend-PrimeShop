@@ -141,7 +141,7 @@ public class ProductController {
     }
     
     /* Example Postman request:
-     * POST http://localhost:8080/api/products/add-images
+     * POST https://backend-primeshop.onrender.com/api/products/add-images
      * 
      * Query Params:
      * productSlug: iphone-14-pro-max

@@ -30,7 +30,7 @@ vnpay.tmn-code=P8WZY8S4
 vnpay.secret-key=AYAZFPB4UZMSBE23W110JC1WPVMG0DOV
 vnpay.pay-url=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 vnpay.return-url=http://localhost:5173/payment-result
-vnpay.ipn-url=http://localhost:8080/api/payment/vnpay/installment/callback
+vnpay.ipn-url=https://backend-primeshop.onrender.com/api/payment/vnpay/installment/callback
 
 # VNPay Installment Configuration
 vnpay.installment.interest-rates.3=8.5
