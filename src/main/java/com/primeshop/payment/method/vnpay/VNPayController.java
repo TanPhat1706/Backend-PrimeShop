@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,8 +24,8 @@ public class VNPayController {
     private final VNPayService vnPayService;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createPayment(@RequestBody PaymentRequest request) throws UnsupportedEncodingException {
-        String url = vnPayService.createPaymentUrl(request);
+    public ResponseEntity<?> createPayment(@RequestBody PaymentRequest request, HttpServletRequest request2) throws UnsupportedEncodingException {
+        String url = vnPayService.createPaymentUrl(request, request2);
         return ResponseEntity.ok(Map.of("paymentUrl", url));
     }
 
