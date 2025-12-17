@@ -13,9 +13,9 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173")
-                        .allowedOrigins("https://primeshopprovip.vercel.app")
-                        .allowedOriginPatterns("*")
+                        .allowedOrigins("http://localhost:5173", "https://primeshopprovip.vercel.app",
+                                        "https://backend-primeshop.onrender.com"
+                        )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                         .allowedHeaders("*")
                         .allowCredentials(true);

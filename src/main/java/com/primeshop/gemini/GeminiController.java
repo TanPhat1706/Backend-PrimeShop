@@ -8,7 +8,6 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/gemini")
-@CrossOrigin(origins = "*")
 public class GeminiController {
 
     @Autowired
