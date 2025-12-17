@@ -29,7 +29,7 @@ Hệ thống VNPay Installment cho phép khách hàng thanh toán trả góp đ�
 vnpay.tmn-code=P8WZY8S4
 vnpay.secret-key=AYAZFPB4UZMSBE23W110JC1WPVMG0DOV
 vnpay.pay-url=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-vnpay.return-url=http://localhost:5173/payment-result
+vnpay.return-url=https://primeshopprovip.vercel.app/payment-result
 vnpay.ipn-url=https://backend-primeshop.onrender.com/api/payment/vnpay/installment/callback
 
 # VNPay Installment Configuration

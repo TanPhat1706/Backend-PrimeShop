@@ -36,9 +36,9 @@ public class VNPayController {
 
         String redirectUrl;
         if (result.isSuccess()) {
-            redirectUrl = "http://localhost:5173/payment/success?orderId=" + orderId;
+            redirectUrl = "https://primeshopprovip.vercel.app/payment/success?orderId=" + orderId;
         } else {
-            redirectUrl = "http://localhost:5173/payment/failed?orderId=" + orderId;
+            redirectUrl = "https://primeshopprovip.vercel.app/payment/failed?orderId=" + orderId;
         }
 
         return ResponseEntity

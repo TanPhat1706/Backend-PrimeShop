@@ -41,7 +41,7 @@ public class ChatbotService {
     private String formatProducts(List<Product> products) {
         if (products.isEmpty()) return "Không có sản phẩm phù hợp.";
         return products.stream()
-                .map(p -> p.getName() + " | " + p.getBrand() + " | " + p.getPrice() + " VND | " + "http://localhost:5173/product-detail/" + p.getSlug())
+                .map(p -> p.getName() + " | " + p.getBrand() + " | " + p.getPrice() + " VND | " + "https://primeshopprovip.vercel.app/product-detail/" + p.getSlug())
                 .collect(Collectors.joining("\n"));
     }
 

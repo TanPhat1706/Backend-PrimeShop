@@ -3,6 +3,8 @@ package com.primeshop.gemini;
 import io.github.cdimascio.dotenv.Dotenv;
 import lombok.extern.slf4j.Slf4j;
 import com.google.gson.*;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -13,7 +15,10 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class GeminiService {
-    private final String geminiApiKey;
+    @Value("${GEMINI_API_KEY}")
+    private String geminiApiKey;
+
+    // private final String geminiApiKey;
     private final RestTemplate restTemplate = new RestTemplate();
     private final Gson gson = new Gson();
     private final GeminiPromptBuilder promptBuilder;
@@ -26,8 +31,8 @@ public class GeminiService {
 
     public GeminiService(GeminiPromptBuilder promptBuilder) {
         this.promptBuilder = promptBuilder;
-        Dotenv dotenv = Dotenv.load();
-        this.geminiApiKey = dotenv.get("GEMINI_API_KEY");
+        // Dotenv dotenv = Dotenv.load();
+        // this.geminiApiKey = dotenv.get("GEMINI_API_KEY");
     }
 
     // ✅ Lấy context (hoặc tạo mới nếu chưa có)
