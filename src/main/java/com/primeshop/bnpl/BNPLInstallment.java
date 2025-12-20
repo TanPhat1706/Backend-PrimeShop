@@ -13,7 +13,7 @@ public class BNPLInstallment {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "agreement_id")
+    @JoinColumn(name = "agreement_id", nullable = false)
     private BNPLAgreement agreement;
 
     private int installmentNumber;

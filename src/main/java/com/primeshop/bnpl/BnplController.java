@@ -2,14 +2,19 @@ package com.primeshop.bnpl;
 
 import com.primeshop.order.Order;
 import com.primeshop.order.OrderRepo;
+import com.primeshop.order.OrderStatus;
+import com.primeshop.payment.PaymentRequest;
 import com.primeshop.user.UserRepo;
+import com.primeshop.payment.VNPayService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
+
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -19,153 +24,208 @@ import java.util.Map;
 public class BnplController {
 
     private final BNPLAgreementRepository agreementRepo;
-    private final BNPLProviderRepository providerRepo;
+    private final BNPLInstallmentRepository installmentRepo;
     private final BNPLBlacklistRepository blacklistRepo;
     private final OrderRepo orderRepo;
     private final UserRepo userRepo;
+    private final VNPayService vnPayService;
 
-    // ========== 1️⃣ Khởi tạo BNPL (Trả sau) ==========
+    // ========== 1️⃣ User yêu cầu trả sau ==========
     @PostMapping("/init")
     public ResponseEntity<?> initBnpl(@RequestBody BnplInitRequest req) {
+
+        if (!List.of(1, 3, 6, 12).contains(req.getMonths())) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Chỉ hỗ trợ 1 / 3 / 6 / 12 kỳ"));
+        }
+
         Order order = orderRepo.findById(req.getOrderId())
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // 🔹 Kiểm tra xem đã có BNPLAgreement cho order này chưa
-        BNPLAgreement existing = agreementRepo.findByOrderId(req.getOrderId()).orElse(null);
-        if (existing != null) {
-            return ResponseEntity.ok(Map.of(
-                    "status", existing.getStatus(),
-                    "consentUrl", "https://sandbox.fundiin.vn/checkout?order=" + existing.getId()));
+        // check blacklist
+        if (blacklistRepo.existsById(order.getUser().getId())) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("error", "User is blacklisted"));
         }
 
-        // 🔹 Nếu chưa có thì tạo mới
+        // đã có BNPL cho order này
+        var existing = agreementRepo.findByOrderId(order.getId()).orElse(null);
+        if (existing != null) {
+            return ResponseEntity.ok(existing);
+        }
+
         BNPLAgreement agr = new BNPLAgreement();
         agr.setUser(order.getUser());
         agr.setOrder(order);
-        agr.setProvider("Fundiin");
-        agr.setStatus("PENDING");
-        agr.setTotalAmount(order.getFinalAmount());
+        agr.setProvider("INTERNAL_BNPL");
+        agr.setStatus("PENDING_APPROVAL");
+        agr.setTotalAmount(
+                order.getFinalAmount() != null
+                        ? order.getFinalAmount()
+                        : order.getTotalAmount());
+
         agreementRepo.save(agr);
 
         return ResponseEntity.ok(Map.of(
-                "status", "PENDING",
-                "consentUrl", "https://sandbox.fundiin.vn/checkout?order=" + agr.getId()));
+                "agreementId", agr.getId(),
+                "status", agr.getStatus(),
+                "months", req.getMonths()));
     }
 
-    // ========== 2️⃣ Xác nhận BNPL (sau khi Fundiin callback) ==========
-    @PostMapping("/confirm")
-    public ResponseEntity<?> confirmBnpl(@RequestBody Map<String, Object> body) {
-        Long orderId = Long.valueOf(body.get("orderId").toString());
-        String status = body.get("status").toString();
+    // ========== 2️⃣ Admin duyệt BNPL + tạo lịch trả ==========
+    @PostMapping("/{agreementId}/approve")
+    public ResponseEntity<?> approveBnpl(
+            @PathVariable Long agreementId,
+            @RequestParam int months) {
+        if (!List.of(1, 3, 6, 12).contains(months)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Invalid installment option"));
+        }
 
-        BNPLAgreement agreement = agreementRepo.findByOrderId(orderId)
+        BNPLAgreement agr = agreementRepo.findById(agreementId)
                 .orElseThrow(() -> new RuntimeException("Agreement not found"));
 
-        agreement.setStatus(status.toUpperCase());
+        agr.setStatus("ACTIVE");
+        agreementRepo.save(agr);
 
-        // Nếu Fundiin xác nhận thành công thì cập nhật đơn hàng
-        if ("APPROVED".equalsIgnoreCase(status)) {
-            Order order = agreement.getOrder();
-            order.setStatus(com.primeshop.order.OrderStatus.CONFIRMED);
-            orderRepo.save(order);
+        BigDecimal total = agr.getTotalAmount();
+        BigDecimal base = total.divide(BigDecimal.valueOf(months), 0, RoundingMode.DOWN);
+        BigDecimal remainder = total.subtract(base.multiply(BigDecimal.valueOf(months)));
+
+        for (int i = 1; i <= months; i++) {
+            BNPLInstallment ins = new BNPLInstallment();
+            ins.setAgreement(agr);
+            ins.setInstallmentNumber(i);
+            ins.setDueDate(LocalDateTime.now().plusMonths(i));
+            ins.setAmount(i == 1 ? base.add(remainder) : base);
+            installmentRepo.save(ins);
         }
 
-        agreementRepo.save(agreement);
+        Order order = agr.getOrder();
+        order.setStatus(OrderStatus.CONFIRMED);
+        orderRepo.save(order);
 
         return ResponseEntity.ok(Map.of(
-                "message", "BNPL agreement updated",
-                "agreementStatus", agreement.getStatus()));
+                "message", "BNPL approved",
+                "installments", months));
     }
 
-    // ========== 3️⃣ Danh sách giao dịch BNPL ==========
-    @GetMapping("/orders")
-    public List<BNPLAgreement> getAllAgreements() {
-        return agreementRepo.findAll();
-    }
+    // ========== 3️⃣ Xem chi tiết BNPL + lịch trả ==========
+    @GetMapping("/agreements/{agreementId}")
+    public ResponseEntity<?> getAgreementDetail(@PathVariable Long agreementId) {
 
-    // ========== 4️⃣ Chi tiết 1 giao dịch ==========
-    @GetMapping("/orders/{orderId}")
-    public ResponseEntity<?> getAgreementDetail(@PathVariable Long orderId) {
-        return agreementRepo.findByOrderId(orderId)
-                .map(a -> {
-                    BNPLAgreementDTO dto = new BNPLAgreementDTO();
-                    dto.setId(a.getId());
-                    dto.setProvider(a.getProvider());
-                    dto.setFundiinOrderId(a.getFundiinOrderId());
-                    dto.setTotalAmount(a.getTotalAmount());
-                    dto.setStatus(a.getStatus());
-                    dto.setCreatedAt(a.getCreatedAt());
-                    dto.setDueDate(a.getDueDate());
-                    dto.setOrderId(a.getOrder().getId());
-                    dto.setUsername(a.getUser().getUsername());
-                    return ResponseEntity.ok(dto);
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
+        // ===== 1️⃣ LẤY AGREEMENT =====
+        BNPLAgreement agr = agreementRepo.findById(agreementId)
+                .orElseThrow(() -> new RuntimeException("Agreement not found"));
 
-    // ========== 5️⃣ Gửi nhắc trả góp ==========
-    @PostMapping("/reminder/{installmentId}")
-    public ResponseEntity<?> sendReminder(@PathVariable Long installmentId) {
-        return ResponseEntity.ok(Map.of("message", "Reminder sent for installment " + installmentId));
-    }
+        // ===== 2️⃣ LẤY INSTALLMENTS =====
+        var installments = installmentRepo.findByAgreement_Id(agreementId);
 
-    // ========== 6️⃣ Blacklist người dùng ==========
-    @PostMapping("/blacklist/{userId}")
-    public ResponseEntity<?> addToBlacklist(@PathVariable Long userId, @RequestBody Map<String, String> body) {
-        var user = userRepo.findById(userId).orElseThrow();
-        var entry = new BNPLBlacklist();
-        entry.setUser(user);
-        entry.setReason(body.getOrDefault("reason", "Overdue payment"));
-        blacklistRepo.save(entry);
-        return ResponseEntity.ok(Map.of("message", "User blacklisted"));
-    }
+        // ===== 3️⃣ MAP AGREEMENT -> DTO =====
+        BNPLAgreementDTO agreementDTO = new BNPLAgreementDTO();
+        agreementDTO.setId(agr.getId());
+        agreementDTO.setProvider(agr.getProvider());
+        agreementDTO.setFundiinOrderId(agr.getFundiinOrderId());
+        agreementDTO.setTotalAmount(agr.getTotalAmount());
+        agreementDTO.setStatus(agr.getStatus());
+        agreementDTO.setCreatedAt(agr.getCreatedAt());
+        agreementDTO.setDueDate(agr.getDueDate());
+        agreementDTO.setOrderId(agr.getOrder().getId());
+        agreementDTO.setUsername(agr.getUser().getUsername());
 
-    // ========== 7️⃣ Danh sách blacklist ==========
-    @GetMapping("/blacklist")
-    public List<BlacklistDTO> getBlacklist() {
-        return blacklistRepo.findAll().stream()
-                .map(BlacklistDTO::from)
-                .toList();
-    }
+        // ===== 4️⃣ MAP INSTALLMENTS -> DTO (CHỐNG JSON LẶP) =====
+        var installmentDTOs = installments.stream().map(i -> {
+            BNPLInstallmentDTO d = new BNPLInstallmentDTO();
+            d.setId(i.getId());
+            d.setInstallmentNumber(i.getInstallmentNumber());
+            d.setAmount(i.getAmount());
+            d.setDueDate(i.getDueDate());
+            d.setPaid(i.isPaid());
+            return d;
+        }).toList();
 
-    // ========== 8️⃣ Báo cáo tổng hợp ==========
-    @GetMapping("/reports")
-    public ResponseEntity<?> getReports() {
-        long total = agreementRepo.count();
-        long approved = agreementRepo.countByStatus("APPROVED");
+        // ===== 5️⃣ RESPONSE CUỐI =====
         return ResponseEntity.ok(Map.of(
-                "totalAgreements", total,
-                "approved", approved));
+                "agreement", agreementDTO,
+                "installments", installmentDTOs));
     }
 
-    // ========== 9️⃣ Xuất CSV ==========
-    @GetMapping("/export")
-    public void exportToCSV(HttpServletResponse response) throws IOException {
-        response.setContentType("text/csv");
-        response.setHeader("Content-Disposition", "attachment; filename=bnpl_orders.csv");
-        var agreements = agreementRepo.findAll();
-        try (PrintWriter writer = response.getWriter()) {
-            writer.println("id,user,provider,status,totalAmount,dueDate");
-            for (BNPLAgreement a : agreements) {
-                writer.println(a.getId() + "," +
-                        a.getUser().getUsername() + "," +
-                        a.getProvider() + "," +
-                        a.getStatus() + "," +
-                        a.getTotalAmount() + "," +
-                        a.getDueDate());
-            }
+    @PostMapping("/installments/{id}/pay")
+    public ResponseEntity<?> payInstallment(@PathVariable Long id)
+            throws UnsupportedEncodingException {
+
+        BNPLInstallment ins = installmentRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Installment not found"));
+
+        if (ins.isPaid()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Installment already paid"));
         }
+
+        PaymentRequest req = new PaymentRequest();
+        req.setOrderId(ins.getId()); // ⚠️ DÙNG installmentId
+        req.setAmount(ins.getAmount()); // tiền của kỳ
+
+        String paymentUrl = vnPayService.createPaymentUrl(req);
+
+        return ResponseEntity.ok(Map.of(
+                "installmentId", ins.getId(),
+                "amount", ins.getAmount(),
+                "paymentUrl", paymentUrl));
     }
 
-    // ========== 🔟 Cấu hình API Fundiin ==========
-    @PutMapping("/config")
-    public ResponseEntity<?> updateConfig(@RequestBody Map<String, String> body) {
-        var config = providerRepo.findByName("Fundiin").orElse(new BNPLProvider());
-        config.setName("Fundiin");
-        config.setApiKey(body.get("apiKey"));
-        config.setSandbox(Boolean.parseBoolean(body.getOrDefault("sandbox", "true")));
-        config.setMaxLimit(new BigDecimal(body.getOrDefault("maxLimit", "10000000")));
-        providerRepo.save(config);
-        return ResponseEntity.ok(Map.of("message", "Config updated"));
+    // ========== 4️⃣ Thanh toán 1 kỳ (sẽ gọi VNPAY / MoMo) ==========
+    @PostMapping("/installments/{id}/pay-success")
+    public ResponseEntity<?> markInstallmentPaid(@PathVariable Long id) {
+
+        BNPLInstallment ins = installmentRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Installment not found"));
+
+        ins.setPaid(true);
+        installmentRepo.save(ins);
+
+        BNPLAgreement agr = ins.getAgreement();
+        boolean allPaid = installmentRepo.findAll().stream()
+                .filter(i -> i.getAgreement().getId().equals(agr.getId()))
+                .allMatch(BNPLInstallment::isPaid);
+
+        if (allPaid) {
+            agr.setStatus("COMPLETED");
+            agreementRepo.save(agr);
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "paid", true,
+                "bnplCompleted", allPaid));
+    }
+
+    @GetMapping("/payment/callback")
+    public ResponseEntity<?> paymentCallback(@RequestParam Map<String, String> params) {
+
+        String responseCode = params.get("vnp_ResponseCode");
+        Long installmentId = Long.valueOf(params.get("vnp_TxnRef"));
+
+        if (!"00".equals(responseCode)) {
+            return ResponseEntity.badRequest().body("Payment failed");
+        }
+
+        // ✅ xử lý trực tiếp
+        BNPLInstallment ins = installmentRepo.findById(installmentId)
+                .orElseThrow(() -> new RuntimeException("Installment not found"));
+
+        ins.setPaid(true);
+        installmentRepo.save(ins);
+
+        BNPLAgreement agr = ins.getAgreement();
+        boolean allPaid = installmentRepo.findByAgreement_Id(agr.getId())
+                .stream()
+                .allMatch(BNPLInstallment::isPaid);
+
+        if (allPaid) {
+            agr.setStatus("COMPLETED");
+            agreementRepo.save(agr);
+        }
+
+        return ResponseEntity.ok("OK");
     }
 }

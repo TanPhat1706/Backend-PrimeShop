@@ -4,4 +4,5 @@ import lombok.Data;
 @Data
 public class BnplInitRequest {
     private Long orderId;
+    private int months;
 }
