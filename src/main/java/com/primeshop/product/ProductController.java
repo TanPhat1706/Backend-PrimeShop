@@ -17,6 +17,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.primeshop.order.OrderItemRepo;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -141,6 +146,24 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAverageRating(id));
     }
     
+@Autowired
+private OrderItemRepo orderItemRepo;
+
+@GetMapping("/users/{userId}/recommendations")
+public ResponseEntity<List<ProductCardResponse>> getRecommendations(@PathVariable Long userId) {
+    // Lấy tất cả categoryId của các sản phẩm user đã mua
+    Set<Long> categoryIds = orderItemRepo.findAllByOrderUserId(userId).stream()
+        .map(oi -> oi.getProduct().getCategory().getId())
+        .collect(Collectors.toSet());
+
+    // Gọi service để lấy top 5 sản phẩm gợi ý
+    List<ProductCardResponse> recommendations = productService.getRecommendedProducts(userId, categoryIds, 5);
+
+    return ResponseEntity.ok(recommendations);
+}
+
+
+
     /* Example Postman request:
      * POST http://localhost:8080/api/products/add-images
      * 

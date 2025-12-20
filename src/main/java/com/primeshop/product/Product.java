@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.primeshop.cart.CartItem;
 import com.primeshop.category.Category;
 import com.primeshop.utils.CodeUtils;
@@ -99,6 +102,7 @@ public class Product {
     private List<ProductImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<ProductReview> reviews = new ArrayList<>();
     
     @Column(name = "description", columnDefinition = "text")
