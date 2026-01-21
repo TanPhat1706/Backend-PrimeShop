@@ -16,6 +16,8 @@ public class OrderResponse {
     private Long orderId;
     private Long userId;
     private BigDecimal totalAmount;
+    private BigDecimal finalAmount; // <--- THÊM DÒNG NÀY (Thực thu)
+    private BigDecimal discountAmount; // <--- THÊM DÒNG NÀY (Tiền giảm giá - Optional nhưng nên có)
     private OrderStatus orderStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -32,6 +34,8 @@ public class OrderResponse {
         this.orderId = order.getId();
         this.userId = order.getUser().getId();        
         this.totalAmount = order.getTotalAmount();
+        this.finalAmount = order.getFinalAmount(); 
+        this.discountAmount = order.getDiscountAmount();
         this.orderStatus = order.getStatus();
         this.createdAt = order.getCreatedAt();
         this.updatedAt = order.getUpdatedAt();

@@ -28,35 +28,49 @@ public class ChatWsController {
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload ChatMessageDTO request,
                             Principal principal) throws AccessDeniedException {
+        // 1. Validate người gửi
         if (principal == null) {
             throw new AccessDeniedException("Principal is null. Interceptor failed.");
         }
         UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) principal;
-        User user = (User) authToken.getPrincipal();
-        System.out.println("[CONTROLLER] Đã lấy User: " + user.getUsername() + ", ID: " + user.getId());
-        MessageResponse saved = chatService.saveMessage(request, user);
-        Long conversationId = saved.getConversationId();
-        messagingTemplate.convertAndSend(
-            "/topic/conversation/" + conversationId,
-            saved
-        );
-        System.out.println("MESSAGES RECEIVED: " + saved);
-        String senderUsername = user.getUsername();
-        Long receiverId = saved.getReceiverId();
-        String receiverUsername = userRepo.findById(receiverId)
-                                        .map(User::getUsername)
-                                        .orElse(null);
+        User sender = (User) authToken.getPrincipal();
 
-        System.out.println("PAYLOAD MESSAGEEEEEEEEEEEEEEEEE: " + request.getContent());
-        logger.info("Đang gửi cho sender: {} trên kênh /queue/messages", senderUsername);
-        messagingTemplate.convertAndSendToUser(
-            senderUsername,
-            "/queue/messages",
+        // 2. Lưu tin nhắn
+        MessageResponse saved = chatService.saveMessage(request, sender);
+        
+        // 3. Gửi Public vào Room Chat (Để cập nhật ngay lập tức cho 2 bên trong khung chat)
+        messagingTemplate.convertAndSend(
+            "/topic/conversation/" + saved.getConversationId(),
             saved
         );
-        logger.info("Đang gửi cho receiver: {} trên kênh /queue/messages", receiverUsername);
+
+        // 4. Logic gửi thông báo riêng (Sidebar update)
+        Long receiverId = saved.getReceiverId();
+        
+        // FIX: Kiểm tra receiverId có null không
+        if (receiverId == null) {
+            logger.error("CRITICAL: Message saved but receiverId is NULL. Conversation ID: {}", saved.getConversationId());
+            return;
+        }
+
+        userRepo.findById(receiverId).ifPresentOrElse(
+            (receiver) -> {
+                String receiverUsername = receiver.getUsername();
+                // LOG QUAN TRỌNG: Xem server đang gửi cho ai
+                logger.info(">>> SOCKET DEBUG: Đang gửi tin cho User [ID: {}] - [Username: {}]", receiver.getId(), receiverUsername);
+                
+                messagingTemplate.convertAndSendToUser(
+                    receiverUsername, // <-- Spring dùng giá trị này để định tuyến
+                    "/queue/messages",
+                    saved
+                );
+            },
+            () -> logger.warn("User ID {} not found...", receiverId)
+        );
+        
+        // Gửi lại cho người gửi (để cập nhật UI sidebar của chính mình)
         messagingTemplate.convertAndSendToUser(
-            receiverUsername,
+            sender.getUsername(),
             "/queue/messages",
             saved
         );

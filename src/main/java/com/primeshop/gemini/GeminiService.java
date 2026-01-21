@@ -75,10 +75,10 @@ public class GeminiService {
         );
 
         // tốc độ chậm, chất lượng cao, chính xác cao
-        // String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=" + geminiApiKey;
+         String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=" + geminiApiKey;
         
         // tốc độ nhanh, chất lượng trung bình, chính xác trung bình thích hợp với tư vấn sản phẩm
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
+        //String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
         
         // tốc độ nhanh nhất, chất lượng thấp, chính xác thấp thích hợp với chat nhanh, tóm tắt
         // String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=" + geminiApiKey;

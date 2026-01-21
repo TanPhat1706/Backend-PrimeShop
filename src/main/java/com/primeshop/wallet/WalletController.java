@@ -3,16 +3,14 @@ package com.primeshop.wallet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
 
 import java.util.*;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.stream.Collectors;
 import com.primeshop.wallet.WalletTransactionRepository;
 
 @RestController
-@RequestMapping("/api/wallet")
+@RequestMapping(value = "/api/wallet", produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8")
 public class WalletController {
 
     @Autowired

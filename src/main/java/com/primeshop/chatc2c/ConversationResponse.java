@@ -13,4 +13,5 @@ public class ConversationResponse {
     private String otherAvatar;
     private String lastMessage;
     private LocalDateTime lastMessageAt;
+    private int unreadCount; // <--- Thêm dòng này
 }

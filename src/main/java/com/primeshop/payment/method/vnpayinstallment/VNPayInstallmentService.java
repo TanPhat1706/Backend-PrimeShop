@@ -1,11 +1,15 @@
 package com.primeshop.payment.method.vnpayinstallment;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +26,9 @@ import com.primeshop.payment.transaction.PaymentTransactionRepo;
 import com.primeshop.utils.PaymentCalcUtil;
 import com.primeshop.utils.VNPayUtil;
 import lombok.RequiredArgsConstructor;
+import java.net.URLEncoder;
+import java.util.Iterator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -206,39 +213,39 @@ public class VNPayInstallmentService {
     /**
      * Tạo URL thanh toán VNPay
      */
-    private String createVNPayPaymentUrl(VNPayInstallmentRequest request, PaymentTransaction transaction, 
-                                       InstallmentAgreement agreement) {
-        Order order = orderRepo.findById(request.getOrderId())
-            .orElseThrow(() -> new IllegalArgumentException("Order not found: " + request.getOrderId()));
-        String vnp_TmnCode = env.getProperty("vnpay.tmn-code");
-        String vnp_Url = env.getProperty("vnpay.pay-url");
-        String vnp_ReturnUrl = env.getProperty("vnpay.return-url");
-        String secretKey = env.getProperty("vnpay.secret-key");
+    // private String createVNPayPaymentUrl(VNPayInstallmentRequest request, PaymentTransaction transaction, 
+    //                                    InstallmentAgreement agreement) {
+    //     Order order = orderRepo.findById(request.getOrderId())
+    //         .orElseThrow(() -> new IllegalArgumentException("Order not found: " + request.getOrderId()));
+    //     String vnp_TmnCode = env.getProperty("vnpay.tmn-code");
+    //     String vnp_Url = env.getProperty("vnpay.pay-url");
+    //     String vnp_ReturnUrl = env.getProperty("vnpay.return-url");
+    //     String secretKey = env.getProperty("vnpay.secret-key");
         
-        Map<String, String> vnpParams = new HashMap<>();
-        vnpParams.put("vnp_Version", "2.1.0");
-        vnpParams.put("vnp_Command", "pay");
-        vnpParams.put("vnp_TmnCode", vnp_TmnCode);
-        vnpParams.put("vnp_Amount", String.valueOf(order.getTotalAmount().multiply(new BigDecimal(100)).longValue()));
-        vnpParams.put("vnp_CurrCode", installmentConfig.getCurrency());
-        vnpParams.put("vnp_TxnRef", transaction.getId().toString());
-        vnpParams.put("vnp_OrderInfo", String.format("Tra gop don hang #%s - %d thang", 
-            request.getOrderId(), request.getInstallmentMonths()));
-        vnpParams.put("vnp_OrderType", installmentConfig.getOrderType());
-        vnpParams.put("vnp_Locale", installmentConfig.getLocale());
-        vnpParams.put("vnp_ReturnUrl", vnp_ReturnUrl);
-        vnpParams.put("vnp_IpAddr", "127.0.0.1");
-        vnpParams.put("vnp_CreateDate", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+    //     Map<String, String> vnpParams = new TreeMap<>();
+    //     vnpParams.put("vnp_Version", "2.1.0");
+    //     vnpParams.put("vnp_Command", "pay");
+    //     vnpParams.put("vnp_TmnCode", vnp_TmnCode);
+    //     vnpParams.put("vnp_Amount", String.valueOf(order.getTotalAmount().multiply(new BigDecimal(100)).longValue()));
+    //     vnpParams.put("vnp_CurrCode", installmentConfig.getCurrency());
+    //     vnpParams.put("vnp_TxnRef", transaction.getId().toString());
+    //     vnpParams.put("vnp_OrderInfo", String.format("Tra gop don hang #%s - %d thang", 
+    //         request.getOrderId(), request.getInstallmentMonths()));
+    //     vnpParams.put("vnp_OrderType", installmentConfig.getOrderType());
+    //     vnpParams.put("vnp_Locale", installmentConfig.getLocale());
+    //     vnpParams.put("vnp_ReturnUrl", vnp_ReturnUrl);
+    //     vnpParams.put("vnp_IpAddr", "127.0.0.1");
+    //     vnpParams.put("vnp_CreateDate", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
         
-        // Thêm thông tin trả góp
-        vnpParams.put("vnp_InstallmentMonths", request.getInstallmentMonths().toString());
-        vnpParams.put("vnp_InterestRate", installmentConfig.getInterestRate(request.getInstallmentMonths()).toString());
+    //     // Thêm thông tin trả góp
+    //     vnpParams.put("vnp_InstallmentMonths", request.getInstallmentMonths().toString());
+    //     vnpParams.put("vnp_InterestRate", installmentConfig.getInterestRate(request.getInstallmentMonths()).toString());
         
-        String query = vnPayUtil.buildQuery(vnpParams);
-        String hashData = vnPayUtil.hmacSHA512(secretKey, query);
+    //     String query = vnPayUtil.buildQuery(vnpParams);
+    //     String hashData = vnPayUtil.hmacSHA512(secretKey, query);
         
-        return vnp_Url + "?" + query + "&vnp_SecureHash=" + hashData;
-    }
+    //     return vnp_Url + "?" + query + "&vnp_SecureHash=" + hashData;
+    // }
     
     /**
      * Verify VNPay hash
@@ -307,4 +314,104 @@ public class VNPayInstallmentService {
             installmentAgreementRepo.save(agreement);
         }
     }
+
+    private String createVNPayPaymentUrl(VNPayInstallmentRequest request, PaymentTransaction transaction, InstallmentAgreement agreement) {
+    try {
+        // 1. Lấy Config từ file application.properties
+        String vnp_TmnCode = env.getProperty("vnpay.tmn-code");
+        String vnp_HashSecret = env.getProperty("vnpay.secret-key");
+        String vnp_Url = env.getProperty("vnpay.pay-url");
+        String vnp_ReturnUrl = env.getProperty("vnpay.return-url");
+
+        // 2. Sử dụng TreeMap để các tham số tự động sắp xếp theo A-Z (BẮT BUỘC)
+        Map<String, String> vnpParams = new TreeMap<>();
+
+        // 3. Các tham số Cấu hình chung
+        vnpParams.put("vnp_Version", "2.1.0");
+        vnpParams.put("vnp_Command", "pay");
+        vnpParams.put("vnp_TmnCode", vnp_TmnCode);
+        vnpParams.put("vnp_CurrCode", "VND");
+        vnpParams.put("vnp_Locale", "vn");
+        vnpParams.put("vnp_OrderType", "other");
+        vnpParams.put("vnp_ReturnUrl", vnp_ReturnUrl);
+
+        // 4. Các tham số Động (Theo đơn hàng)
+        // Số tiền (nhân 100 theo yêu cầu VNPAY)
+        long amount = orderRepo.findById(request.getOrderId())
+                        .orElseThrow(() -> new IllegalArgumentException("Order not found"))
+                        .getTotalAmount()
+                        .multiply(new BigDecimal(100))
+                        .longValue();
+        vnpParams.put("vnp_Amount", String.valueOf(amount));
+
+        // Mã giao dịch (Unique) - Kết hợp ID và Timestamp để không bao giờ trùng
+        String uniqueTxnRef = transaction.getId() + "_" + System.currentTimeMillis();
+        vnpParams.put("vnp_TxnRef", uniqueTxnRef);
+        
+        // Nội dung thanh toán (Không dấu, không ký tự đặc biệt để an toàn)
+        vnpParams.put("vnp_OrderInfo", "ThanhToanDonHang" + request.getOrderId());
+
+        // Địa chỉ IP (Dùng IP Public giả lập để qua mặt Sandbox check)
+        vnpParams.put("vnp_IpAddr", "113.160.0.1"); 
+
+        // Thời gian tạo
+        vnpParams.put("vnp_CreateDate", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+
+        // 5. [QUAN TRỌNG] Xử lý tham số Trả Góp (Installment)
+        // Lưu ý: Cổng VNPAY Redirect chuẩn thường KHÔNG cần gửi installment_months lên.
+        // Việc chọn kỳ hạn sẽ thực hiện tại trang Ngân hàng.
+        // Tuy nhiên, nếu Merchant Config của huynh đệ có bật tính năng "Pre-select Installment", thì mới mở comment dòng dưới:
+        // vnpParams.put("vnp_InstallmentMonths", request.getInstallmentMonths().toString());
+
+        // 6. Xây dựng Chuỗi Hash & Query String (Thủ công để kiểm soát Encoding)
+        List<String> fieldNames = new ArrayList<>(vnpParams.keySet());
+        StringBuilder hashData = new StringBuilder();
+        StringBuilder query = new StringBuilder();
+
+        Iterator<String> itr = fieldNames.iterator();
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
+            String fieldValue = vnpParams.get(fieldName);
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                
+                // Chuẩn hóa Encoding: Java URLEncoder dùng dấu +, VNPAY thích %20
+                String encodedKey = URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString());
+                String encodedValue = URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()).replace("+", "%20");
+
+                // Build Hash Data (Dùng để tính Checksum)
+                hashData.append(fieldName);
+                hashData.append('=');
+                hashData.append(encodedValue); // VNPAY Sandbox thường hash chuỗi đã encode (với %20)
+
+                // Build Query String (Dùng để nối vào URL)
+                query.append(encodedKey);
+                query.append('=');
+                query.append(encodedValue);
+
+                if (itr.hasNext()) {
+                    query.append('&');
+                    hashData.append('&');
+                }
+            }
+        }
+
+        // 7. Tạo Chữ ký bảo mật (Secure Hash)
+        String queryUrl = query.toString();
+        String vnp_SecureHash = vnPayUtil.hmacSHA512(vnp_HashSecret, hashData.toString());
+
+        // 8. Log để Debug (Xóa khi lên Production)
+        logger.info("Url: " + vnp_Url + "?" + queryUrl + "&vnp_SecureHash=" + vnp_SecureHash);
+
+        // 9. Trả về URL hoàn chỉnh
+        return vnp_Url + "?" + queryUrl + "&vnp_SecureHash=" + vnp_SecureHash;
+
+    } catch (UnsupportedEncodingException e) {
+        logger.error("Encoding Error", e);
+        throw new RuntimeException("Error encoding URL params", e);
+    } catch (Exception e) {
+        logger.error("Unknown Error creating VNPAY URL", e);
+        throw new RuntimeException("Error creating payment URL", e);
+    }
+}
+
 }

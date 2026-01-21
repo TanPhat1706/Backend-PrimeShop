@@ -22,4 +22,6 @@ public class Message {
     private String content;
 
     private LocalDateTime createdAt;
+
+    private boolean isRead; // false = chưa xem, true = đã xem
 }

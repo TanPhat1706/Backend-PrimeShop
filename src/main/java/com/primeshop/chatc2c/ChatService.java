@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.primeshop.user.User;
 import com.primeshop.user.UserService;
 import com.primeshop.utils.SecurityUtils;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -120,6 +121,16 @@ public class ChatService {
                 conversation.getCustomerId() :
                 conversation.getSellerId();
         User otherUser = securityUtils.getUserById(otherUserId);
+        // compute unread messages: for each message, receiver = the other participant (not the sender)
+        long unread = conversation.getMessages().stream()
+            .filter(m -> {
+                Long senderId = m.getSenderId();
+                Long receiverId = senderId != null && senderId.equals(conversation.getSellerId())
+                    ? conversation.getCustomerId()
+                    : conversation.getSellerId();
+                return receiverId != null && receiverId.equals(currentUserId) && !m.isRead();
+            })
+            .count();
         return ConversationResponse.builder()
             .id(conversation.getId())
             .otherUserId(otherUser.getId())
@@ -127,6 +138,7 @@ public class ChatService {
             .otherAvatar(otherUser.getAvatar())
             .lastMessage(conversation.getLastMessage())
             .lastMessageAt(conversation.getLastMessageAt())
+            .unreadCount((int) unread)
             .build();
     }
 
@@ -156,4 +168,15 @@ public class ChatService {
                 .createdAt(m.getCreatedAt())
                 .build());
     }
+    public List<ConversationResponse> getConversationsByUserId(Long userId) {
+        // 1. Gọi Repository lấy List Entity
+        List<Conversation> conversations = conversationRepository.findByUserId(userId);
+
+        // 2. Duyệt qua từng cái và map sang DTO bằng method mapToDto có sẵn trong class
+        return conversations.stream()
+                .map(c -> mapToDto(c, userId))
+                .toList();
+    }
+
+
 }

@@ -22,6 +22,7 @@ public class ProductCardResponse {
     private String category;
     private Long sellerId;
     private String shopName;
+    private Product.ProductStatus status;
 
     public ProductCardResponse(Product product) {
         this.id = product.getId();
@@ -39,6 +40,7 @@ public class ProductCardResponse {
         this.category = product.getCategory().getName();
         this.sellerId = product.getSeller().getId();
         this.shopName = product.getSeller().getShopName();
+        this.status = product.getStatus();
     }    
 }
 

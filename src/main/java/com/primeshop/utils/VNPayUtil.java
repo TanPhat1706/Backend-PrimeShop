@@ -24,10 +24,21 @@ public class VNPayUtil {
         }
     }
 
-    public String buildQuery(Map<String, String> params) {
-        return params.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(e -> e.getKey() + "=" + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
-                .collect(Collectors.joining("&"));
+    // [VNPayUtil.java]
+
+public String buildQuery(Map<String, String> params) {
+    return params.entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .map(e -> {
+                try {
+                    // Encode chuẩn, sau đó đổi dấu + thành %20
+                    String encodedValue = URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8)
+                                          .replace("+", "%20"); 
+                    return e.getKey() + "=" + encodedValue;
+                } catch (Exception ex) {
+                    return e.getKey() + "=" + e.getValue();
+                }
+            })
+            .collect(Collectors.joining("&"));
     }
 }

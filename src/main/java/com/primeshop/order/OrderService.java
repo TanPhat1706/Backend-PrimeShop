@@ -81,6 +81,11 @@ public class OrderService {
             orderItem.setProduct(product);
             orderItem.setQuantity(cartItem.getQuantity());
             orderItem.setTotalPrice(cartItem.getTotalPrice());
+            orderItem.setProductName(product.getName()); // Lưu tên sản phẩm snapshot
+            
+            // ✅ FIX 3: Lưu URL ảnh vào chi tiết đơn hàng (Snapshot)
+            // Điều này đảm bảo dù sau này sản phẩm đổi ảnh, đơn hàng vẫn giữ ảnh cũ
+            orderItem.setProductImageUrl(product.getImageUrl());
 
             orderItems.add(orderItem);
             totalAmount = totalAmount.add(orderItem.getTotalPrice());
@@ -92,7 +97,6 @@ public class OrderService {
         
         // Thu thập voucher codes từ cả request và cart
         if (request.getVoucherCodes() != null && !request.getVoucherCodes().isEmpty()) {
-            System.out.println("🔄 Vouchers from request: " + request.getVoucherCodes());
             voucherCodesToProcess.addAll(request.getVoucherCodes());
         }
         
@@ -100,7 +104,6 @@ public class OrderService {
         if (voucherCodesToProcess.isEmpty()) {
             List<Voucher> cartVouchers = cart.getVouchers();
             if (cartVouchers != null && !cartVouchers.isEmpty()) {
-                System.out.println("🛒 Vouchers from cart: " + cartVouchers.size() + " vouchers");
                 voucherCodesToProcess = cartVouchers.stream()
                     .map(Voucher::getCode)
                     .collect(Collectors.toList());
@@ -109,31 +112,15 @@ public class OrderService {
         
         // Xử lý tất cả voucher codes (tăng used_count)
         if (!voucherCodesToProcess.isEmpty()) {
-            System.out.println("🎯 Processing vouchers for order (WILL INCREASE USED_COUNT): " + voucherCodesToProcess);
-            
             try {
                 // Sử dụng method để tăng used_count
                 appliedVouchers = voucherService.processVouchersForOrder(
                     voucherCodesToProcess, 
                     totalAmount.doubleValue()
                 );
-                
-                System.out.println("✅ Vouchers processed and used_count increased: " + appliedVouchers.size() + " vouchers");
-                
-                // Log chi tiết từng voucher đã xử lý
-                for (Voucher voucher : appliedVouchers) {
-                    System.out.println("📝 Voucher applied to order: " + voucher.getCode() + 
-                                     " (used_count: " + voucher.getCurrentUsage() + 
-                                     ", max_usage: " + voucher.getMaxUsage() + ")");
-                }
-                
             } catch (RuntimeException e) {
-                System.err.println("❌ Voucher processing failed: " + e.getMessage());
-                e.printStackTrace(); // In stack trace để debug
                 throw e; // Re-throw để rollback transaction
             }
-        } else {
-            System.out.println("ℹ️ No vouchers to process");
         }
 
         // Tính discountAmount tổng hợp nếu cần
@@ -146,7 +133,7 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
         order.setDiscountAmount(discountAmount);
         order.setFinalAmount(finalAmount);
-        order.setVouchers(appliedVouchers); // <-- Gán danh sách voucher
+        order.setVouchers(appliedVouchers); 
         order.setOrderItems(orderItems);
         order.setFullName(request.getFullName());
         order.setPhoneNumber(request.getPhoneNumber());
@@ -220,11 +207,8 @@ public class OrderService {
         
         // Tự động tính toán lợi nhuận khi đơn hàng đạt trạng thái DELIVERED
         if (status == OrderStatus.DELIVERED) {
-            // Tính toán lợi nhuận từ đơn hàng
             BigDecimal orderRevenue = order.getTotalAmount();
             BigDecimal orderProfit = calculateOrderProfit(order);
-            
-            // Sử dụng ngày tạo đơn hàng để xác định tháng cần cập nhật
             String period = order.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM"));
             revenueService.updateRevenueFromOrder(orderRevenue, orderProfit, period);
         }
@@ -270,21 +254,13 @@ public class OrderService {
         return orderRepo.countByUser(userId);
     }
     
-    /**
-     * Tính toán lợi nhuận từ đơn hàng
-     * Lợi nhuận = Tổng doanh thu - Tổng chi phí
-     * Sử dụng ước tính chi phí dựa trên giá gốc của sản phẩm
-     */
     private BigDecimal calculateOrderProfit(Order order) {
         BigDecimal totalRevenue = order.getTotalAmount();
         BigDecimal totalCost = BigDecimal.ZERO;
         
-        // Tính tổng chi phí từ các sản phẩm trong đơn hàng
         for (OrderItem orderItem : order.getOrderItems()) {
             Product product = orderItem.getProduct();
-            // Sử dụng giá gốc làm ước tính chi phí (có thể điều chỉnh tỷ lệ)
             BigDecimal unitCost = product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO;
-            // Ước tính chi phí bằng 70% giá bán (có thể điều chỉnh)
             BigDecimal estimatedUnitCost = unitCost.multiply(BigDecimal.valueOf(0.7));
             BigDecimal itemCost = estimatedUnitCost.multiply(BigDecimal.valueOf(orderItem.getQuantity()));
             totalCost = totalCost.add(itemCost);
@@ -297,10 +273,7 @@ public class OrderService {
         Optional<Order> optionalOrder = orderRepository.findById(orderId);
         if (optionalOrder.isEmpty()) return false;
         Order order = optionalOrder.get();
-
-        // Kiểm tra trước khi set
         order.setStatus(OrderStatus.valueOf(status));
-
         orderRepository.save(order);
         return true;
     }

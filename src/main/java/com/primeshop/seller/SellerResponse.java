@@ -10,6 +10,7 @@ public class SellerResponse {
     private String description;
     private String phone;
     private String status;
+    private Long userId;
 
     public SellerResponse(SellerProfile sellerProfile) {
         this.id = sellerProfile.getId();
@@ -18,5 +19,8 @@ public class SellerResponse {
         this.description = sellerProfile.getDescription();
         this.phone = sellerProfile.getPhone();
         this.status = sellerProfile.getStatus().name();
+        if (sellerProfile.getUser() != null) {
+            this.userId = sellerProfile.getUser().getId();
+        }
     }
 }

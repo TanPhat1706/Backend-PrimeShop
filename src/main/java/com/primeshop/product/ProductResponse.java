@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import com.primeshop.seller.SellerResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.primeshop.product.Product.ProductStatus;;
 
 @Data
 @NoArgsConstructor
@@ -28,6 +29,8 @@ public class ProductResponse {
     private List<ProductSpecResponse> specs;
     private String description;
     private SellerResponse seller;
+    private Long sellerId;
+    private String shopName;
 
     public ProductResponse(Product product) {
         this.id = product.getId();
@@ -52,5 +55,7 @@ public class ProductResponse {
             .collect(Collectors.toList());
         this.description = product.getDescription();
         this.seller = new SellerResponse(product.getSeller());
+        this.sellerId = (product.getSeller() != null) ? product.getSeller().getId() : null;
+        this.shopName = (product.getSeller() != null) ? product.getSeller().getShopName() : "Unknown Shop";
     }    
 }

@@ -22,6 +22,9 @@ import lombok.RequiredArgsConstructor;
 public class ChatController {
     private final ChatService chatService;
     private final SecurityUtils securityUtils;
+    private final ChatMapper chatMapper;
+
+    
 
     @PostMapping("/send")
     public Message send(@RequestParam Long sellerId,
@@ -33,8 +36,13 @@ public class ChatController {
 
     @GetMapping("/conversations")
     public ResponseEntity<List<ConversationResponse>> getConversations() {
+        // 1. Lấy User đang đăng nhập
         User currentUser = securityUtils.getCurrentUser();
-        List<ConversationResponse> list = chatService.findByUserId(currentUser.getId());
+        
+        // 2. Gọi Service
+        List<ConversationResponse> list = chatService.getConversationsByUserId(currentUser.getId());
+        
+        // 3. Trả về
         return ResponseEntity.ok(list);
     }
 
@@ -50,4 +58,19 @@ public class ChatController {
         );
         return ResponseEntity.ok(messages);
     }
+
+    // Endpoint tạo cuộc hội thoại mới khi bấm "Chat Ngay"
+    @PostMapping("/create")
+    public ResponseEntity<ConversationResponse> createConversation(@RequestParam Long sellerId) {
+        // 1. Lấy người dùng hiện tại (người mua)
+        User currentUser = securityUtils.getCurrentUser();
+        
+        // 2. Gọi Service tạo hoặc lấy hội thoại (logic bạn đã có sẵn)
+        Conversation conversation = chatService.getOrCreateConversation(sellerId, currentUser.getId());
+        
+        // 3. Map sang Response (cần truyền thêm currentUser.getId() để Mapper biết ai là người "kia")
+        return ResponseEntity.ok(chatMapper.toConversationResponse(conversation, currentUser.getId()));
+    }
+
+    
 }
