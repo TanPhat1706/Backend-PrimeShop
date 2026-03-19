@@ -12,6 +12,7 @@ Tích hợp các cổng thanh toán điện tử (VNPay/MoMo/PayPal).
 [x] Quản lý sản phẩm: Tìm kiếm, lọc theo danh mục, quản lý kho hàng.
 [x] Giỏ hàng & Đơn hàng: Luồng đặt hàng tối ưu, quản lý trạng thái đơn hàng.
 [x] Thanh toán trực tuyến: Tích hợp thành công cổng thanh toán PayPal, VNPay và MoMo.
+[x] Voucher & Minigame : Tham gia trò chơi nhỏ của hệ thống và nhận về các mã khuyến mãi áp dụng để giảm trực tiếp đơn hàng hoặc miễn phí vận chuyển.
 [x] Báo cáo & Thống kê: Dashboard dành cho Admin theo dõi doanh thu và số lượng đơn hàng.
 💻 Công nghệ sử dụng
 Backend
