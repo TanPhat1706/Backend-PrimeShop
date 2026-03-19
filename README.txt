@@ -11,7 +11,7 @@ Tích hợp các cổng thanh toán điện tử (VNPay/MoMo/PayPal).
 [x] Xác thực & Phân quyền: Sử dụng Spring Security & JWT (Role-based access: Admin/User).
 [x] Quản lý sản phẩm: Tìm kiếm, lọc theo danh mục, quản lý kho hàng.
 [x] Giỏ hàng & Đơn hàng: Luồng đặt hàng tối ưu, quản lý trạng thái đơn hàng.
-[x] Thanh toán trực tuyến: Tích hợp thành công cổng thanh toán VNPay và MoMo.
+[x] Thanh toán trực tuyến: Tích hợp thành công cổng thanh toán PayPal, VNPay và MoMo.
 [x] Báo cáo & Thống kê: Dashboard dành cho Admin theo dõi doanh thu và số lượng đơn hàng.
 💻 Công nghệ sử dụng
 Backend
