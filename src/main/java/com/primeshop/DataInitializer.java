@@ -4,6 +4,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+// import com.primeshop.stock.BusinessService;
 import com.primeshop.user.Role;
 import com.primeshop.user.RoleRepo;
 
@@ -21,6 +22,9 @@ public class DataInitializer {
             if (roleRepository.findByName(Role.RoleName.ROLE_USER).isEmpty()) {
                 roleRepository.save(new Role(Role.RoleName.ROLE_USER));
             }
+            
+            // Khởi tạo dữ liệu mặc định cho Business
+            // businessService.initializeDefaultBusinesses();
         };
     }
 }

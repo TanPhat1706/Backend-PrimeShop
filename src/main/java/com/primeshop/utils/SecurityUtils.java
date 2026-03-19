@@ -28,4 +28,11 @@ public class SecurityUtils {
     public User getUserById(Long id) {
         return userRepo.findById(id).orElseThrow(() -> new RuntimeException("User not found!"));
     }
+
+    public Long getCurrentUserId() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found!"))
+                .getId();
+    }
 }

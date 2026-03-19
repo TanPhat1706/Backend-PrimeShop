@@ -2,8 +2,6 @@ package com.primeshop.news;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import com.primeshop.news.NewsStatus;
-import com.primeshop.news.NewsCategory;
 import com.primeshop.user.User;
 
 @Entity
@@ -13,12 +11,12 @@ public class News {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String title;
 
     private String slug;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String excerpt;
 
     @Column(name = "image_url")

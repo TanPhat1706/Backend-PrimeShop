@@ -2,10 +2,6 @@ package com.primeshop.news;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 public class NewsResponse {
     private Long id;
     private String title;

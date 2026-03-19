@@ -41,9 +41,10 @@ public class CategoryController {
     public ResponseEntity<?> getAllCategories() {
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
-
+    
     @GetMapping("/count")
-    public ResponseEntity<?> countCategory() {
-        return ResponseEntity.ok(categoryService.countCategory());
+    public ResponseEntity<?> getCategoriesCount() {
+        long count = categoryRepo.count();
+        return ResponseEntity.ok(count);
     }
 }

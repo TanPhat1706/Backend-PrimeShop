@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.primeshop.product.ProductCardResponse;
 import com.primeshop.product.ProductFilterRequest;
 import com.primeshop.product.ProductRepo;
@@ -35,8 +34,8 @@ public class AdminProductController {
     private ProductRepo productRepo;
 
     @PostMapping("/add")
-    public ResponseEntity<?> addProduct(@RequestBody ProductRequest request) {
-        return ResponseEntity.ok(productService.addProduct(request));
+    public ResponseEntity<?> addProduct(@RequestBody ProductRequest request, @RequestParam Long sellerId) {
+        return ResponseEntity.ok(productService.addProduct(request, sellerId));
     }
 
     @PatchMapping("/update")

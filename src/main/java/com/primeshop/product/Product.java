@@ -6,16 +6,19 @@ import java.util.ArrayList;
 import java.util.List;
 import com.primeshop.cart.CartItem;
 import com.primeshop.category.Category;
+import com.primeshop.seller.SellerProfile;
 import com.primeshop.utils.CodeUtils;
 import com.primeshop.utils.SlugUtils;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
@@ -37,6 +40,10 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", nullable = false)
+    private SellerProfile seller;
 
     @Column(name = "name", nullable = false, length = 255)
     private String name;
@@ -74,6 +81,10 @@ public class Product {
     @Column(name = "active", nullable = false)
     private Boolean active = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ProductStatus status = ProductStatus.PENDING;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -104,6 +115,12 @@ public class Product {
     @Column(name = "description", columnDefinition = "text")
     private String description;
 
+    // @ManyToOne
+    // @JoinColumn(name = "business_id", nullable = false)
+    // private Business business;
+
+    private Integer returnedQuantity = 0;
+
     @Transient
     public String getCode() {
         return CodeUtils.encodeProductId(this.id);
@@ -118,7 +135,7 @@ public class Product {
 
     @PreUpdate
     protected void onUpdate() {
-        // updatedAt is handled by @UpdateTimestamp
+        this.updatedAt = LocalDateTime.now();
     }
 
     public Product(ProductRequest request, Category category) {
@@ -133,6 +150,7 @@ public class Product {
         this.sold = request.getSold() != null ? request.getSold() : 0;
         this.category = category;
         this.description = request.getDescription();
+        this.status = ProductStatus.PENDING;
     }
 
     public BigDecimal calculateDiscountPrice(BigDecimal originalPrice, BigDecimal discountPercent) {
@@ -170,4 +188,10 @@ public class Product {
         }
     }
 
+    public enum ProductStatus {
+        PENDING,
+        APPROVED,
+        REJECTED,
+        DISABLED
+    }
 }

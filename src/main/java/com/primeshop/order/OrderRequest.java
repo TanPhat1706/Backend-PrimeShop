@@ -12,4 +12,5 @@ public class OrderRequest {
     private String phoneNumber;
     private String address;
     private String note;
+    private List<String> voucherCodes; // <-- BỔ SUNG DÒNG NÀY
 }

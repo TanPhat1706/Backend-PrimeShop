@@ -1,8 +1,5 @@
 package com.primeshop.news;
 
-import com.primeshop.news.NewsRequest;
-import com.primeshop.news.NewsResponse;
-import com.primeshop.news.NewsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -10,19 +7,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/news")
 @CrossOrigin(origins = "http://localhost:5173")
 public class NewsController {
-
     private final NewsService newsService;
-    private final NewsRepository newsRepository;
 
     @Autowired
-    public NewsController(NewsService newsService, NewsRepository newsRepository) {
+    public NewsController(NewsService newsService) {
         this.newsService = newsService;
-        this.newsRepository = newsRepository;
     }
 
     @GetMapping
@@ -74,9 +70,12 @@ public class NewsController {
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
-
+    
     @GetMapping("/count")
-    public ResponseEntity<?> countNews() {
-        return ResponseEntity.ok(newsRepository.countByNews());
+    public ResponseEntity<Map<String, Long>> countNews() {
+        long count = newsService.countNews();
+        Map<String, Long> response = new HashMap<>();
+        response.put("count", count);
+        return ResponseEntity.ok(response);
     }
 }

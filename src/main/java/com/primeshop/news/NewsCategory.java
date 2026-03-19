@@ -1,6 +1,5 @@
 package com.primeshop.news;
 
-import com.primeshop.news.News;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;

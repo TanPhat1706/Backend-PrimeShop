@@ -7,11 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.primeshop.seller.SellerProfile;
+import com.primeshop.seller.SellerRepo;
+
 
 @Service
 public class UserService {
     @Autowired
     private UserRepo userRepo;
+    @Autowired
+    private SellerRepo sellerRepo;
 
     public UserResponse getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -50,5 +55,10 @@ public class UserService {
             userResponses.add(new UserResponse(user));
         }
         return userResponses;
+    }
+
+    public boolean isSeller(Long userId) {
+        Optional<SellerProfile> seller = sellerRepo.findByUserId(userId);
+        return (seller.get() == null) ? false : true;
     }
 }

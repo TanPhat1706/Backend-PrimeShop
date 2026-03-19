@@ -2,12 +2,14 @@ package com.primeshop.product;
 
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import com.primeshop.product.Product.ProductStatus;
 
 @Repository
 public interface ProductRepo extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
@@ -40,4 +42,14 @@ public interface ProductRepo extends JpaRepository<Product, Long>, JpaSpecificat
     List<Product> findByIsDiscountedTrueAndActiveTrueOrderByDiscountPercentDesc();
 
     Long countByActiveTrue();
+
+    //Chatbot
+    List<Product> findByBrand(String brand);
+
+    @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<Product> searchByName(@Param("name") String name);
+
+    Optional<Product> findBySellerId(Long sellerId);
+
+    List<Product> findByStatus(ProductStatus status);
 }

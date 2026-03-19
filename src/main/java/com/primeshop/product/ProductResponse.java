@@ -3,9 +3,10 @@ package com.primeshop.product;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.primeshop.utils.CodeUtils;
+import com.primeshop.seller.SellerResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.primeshop.product.Product.ProductStatus;;
 
 @Data
 @NoArgsConstructor
@@ -27,6 +28,9 @@ public class ProductResponse {
     private String category;
     private List<ProductSpecResponse> specs;
     private String description;
+    private SellerResponse seller;
+    private Long sellerId;
+    private String shopName;
 
     public ProductResponse(Product product) {
         this.id = product.getId();
@@ -50,5 +54,8 @@ public class ProductResponse {
             .map(ProductSpecResponse::new)
             .collect(Collectors.toList());
         this.description = product.getDescription();
+        this.seller = new SellerResponse(product.getSeller());
+        this.sellerId = (product.getSeller() != null) ? product.getSeller().getId() : null;
+        this.shopName = (product.getSeller() != null) ? product.getSeller().getShopName() : "Unknown Shop";
     }    
 }
