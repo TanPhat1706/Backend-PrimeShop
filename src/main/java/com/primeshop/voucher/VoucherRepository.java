@@ -11,6 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface VoucherRepository extends JpaRepository<Voucher, Long> {
+
     
     // Tìm voucher theo mã code
     Optional<Voucher> findByCode(String code);
@@ -77,4 +78,6 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
 
     List<Voucher> findAllByCodeIn(List<String> codes);
        List<Voucher> findByUserId(Long userId);
+
+
 }
