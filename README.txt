@@ -1,12 +1,6 @@
 🛒 PrimeShop - Fullstack E-commerce Platform
 📝 Giới thiệu dự án
 PrimeShop là dự án thương mại điện tử hoàn chỉnh được thực hiện trong kỳ thực tập/đồ án năm 4. Hệ thống cho phép người dùng trải nghiệm quy trình mua sắm khép kín từ tìm kiếm sản phẩm, quản lý giỏ hàng đến thanh toán trực tuyến qua các cổng VNPay và MoMo.Dự án được vận hành theo mô hình Agile/Scrum với mục tiêu tối ưu hóa trải nghiệm người dùng và đảm bảo tính bảo mật cho dữ liệu giao dịch.
-👨‍ Quản trị & Điều phối (Project Management)
-Mô hình: Agile/Scrum (Sprint 2 tuần).
-Vai trò: Project Manager & Technical Lead.
-Trách nhiệm chính: * Thiết kế kiến trúc hệ thống và chuẩn hóa cấu trúc thư mục (Folder Structure).
-Điều phối công việc cho đội ngũ, quản lý tiến độ và review mã nguồn.
-Tích hợp các cổng thanh toán điện tử (VNPay/MoMo/PayPal).
 🚀 Tính năng nổi bật
 [x] Xác thực & Phân quyền: Sử dụng Spring Security & JWT (Role-based access: Admin/User/Seller).
 [x] Quản lý sản phẩm: Tìm kiếm, lọc theo danh mục, quản lý kho hàng.
