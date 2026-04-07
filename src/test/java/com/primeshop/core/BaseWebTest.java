@@ -27,18 +27,23 @@ public class BaseWebTest {
     @BeforeEach
     public void setUpBrowser() {
         ChromeOptions options = new ChromeOptions();
-        // options.addArguments("--headless"); // (Tùy chọn) Bỏ comment dòng này nếu muốn test chạy ngầm không hiện giao diện lên cho nhẹ máy
         
-        // Khởi động trình duyệt
+        // 🚀 BÍ QUYẾT Ở ĐÂY: Dạy bot lờ đi cảnh báo bảo mật SSL tự tạo (https://localhost)
+        options.setAcceptInsecureCerts(true); // Tự động chấp nhận chứng chỉ không an toàn
+        options.addArguments("--ignore-certificate-errors"); // Bỏ qua mọi lỗi liên quan đến SSL
+        
+        // options.addArguments("--headless"); // (Tùy chọn chạy ngầm)
+        
+        // Khởi động trình duyệt với bộ cấu hình mới
         browser = new ChromeDriver(options);
         
-        // Phóng to toàn màn hình để giao diện không bị vỡ (Responsive)
+        // Phóng to toàn màn hình
         browser.manage().window().maximize();
         
-        // Cài đặt thời gian chờ ngầm định: Nếu tìm không thấy cái nút, hãy ráng chờ 5 giây xem React có render kịp không, hết 5s mới được báo lỗi.
+        // Cài đặt thời gian chờ ngầm định
         browser.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
 
-        // Khởi tạo đồng hồ chờ rõ ràng (Chờ tối đa 10s cho các tác vụ nặng)
+        // Khởi tạo đồng hồ chờ rõ ràng
         wait = new WebDriverWait(browser, Duration.ofSeconds(10));
     }
 
